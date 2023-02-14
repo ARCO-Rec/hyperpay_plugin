@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-
 import 'package:flutter/services.dart';
 import 'package:hyperpay/hyperpay.dart';
+import 'package:hyperpay/models/card_model.dart';
 
 void main() {
   runApp(const MyApp());
@@ -31,8 +31,8 @@ class _MyAppState extends State<MyApp> {
     // Platform messages may fail, so we use a try/catch PlatformException.
     // We also handle the message potentially returning null.
     try {
-      platformVersion =
-          await _hyperpayPlugin.getPlatformVersion() ?? 'Unknown platform version';
+      platformVersion = await _hyperpayPlugin.getPlatformVersion() ??
+          'Unknown platform version';
     } on PlatformException {
       platformVersion = 'Failed to get platform version.';
     }
@@ -47,10 +47,26 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+  Future<void> pay() async {
+    await _hyperpayPlugin.payTransaction(
+        CardData(
+            holder: 'hehe',
+            cardNumber: '4200000000000000',
+            cvv: '123',
+            expiryMonth: '12',
+            expiryYear: '2027'),
+        '12se54512',
+        'VISA');
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
+        floatingActionButton: FloatingActionButton(
+          onPressed: pay,
+          child: const Icon(Icons.payment),
+        ),
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),

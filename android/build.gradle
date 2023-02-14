@@ -1,6 +1,5 @@
 group 'sa.arco.hyperpay'
 version '1.0-SNAPSHOT'
-
 buildscript {
     ext.kotlin_version = '1.7.10'
     repositories {
@@ -9,28 +8,29 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.2.0'
+        classpath 'com.android.tools.build:gradle:4.1.3'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
-allprojects {
+rootProject.allprojects {
     repositories {
         google()
         mavenCentral()
+        flatDir {
+            dirs project(':hyperpay').file('libs')
+        }
     }
 }
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
-android {
-    compileSdkVersion 31
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
+android {
+    compileSdkVersion 33
+
+   
 
     kotlinOptions {
         jvmTarget = '1.8'
@@ -41,6 +41,30 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 16
+        minSdkVersion 21
+        // targetSdkVersion 31
     }
 }
+dependencies {
+    implementation (name:"oppwa.mobile-4.9.0-release", ext:'aar')
+    debugImplementation (name: "ipworks3ds_sdk", ext:'aar')
+    releaseImplementation (name:"ipworks3ds_sdk_deploy", ext:'aar')
+    
+    
+  //  implementation fileTree(dir: "libs", include: ["*.aar"])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.7.0"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.3"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.3"
+    implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
+    implementation "androidx.appcompat:appcompat:1.4.2"
+    implementation "androidx.browser:browser:1.4.0"
+    implementation "com.google.android.material:material:1.6.1"
+    implementation 'androidx.fragment:fragment-ktx:1.4.1'
+    implementation "com.google.android.gms:play-services-wallet:19.1.0"
+
+    
+}
+
+
+
+

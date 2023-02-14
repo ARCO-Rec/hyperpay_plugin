@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:hyperpay/models/card_model.dart';
 
 import 'hyperpay_platform_interface.dart';
 
@@ -11,7 +12,18 @@ class MethodChannelHyperpay extends HyperpayPlatform {
 
   @override
   Future<String?> getPlatformVersion() async {
-    final version = await methodChannel.invokeMethod<String>('getPlatformVersion');
+    final version =
+        await methodChannel.invokeMethod<String>('getPlatformVersion');
     return version;
+  }
+
+  @override
+  Future<void> payTransaction(
+      CardData card, String checkoutID, String brand) async {
+    await methodChannel.invokeMethod<String>('start_payment', {
+      'checkoutID': checkoutID,
+      'brand': brand,
+      'card': card.toMap(),
+    });
   }
 }
