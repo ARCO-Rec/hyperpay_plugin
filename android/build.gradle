@@ -1,7 +1,7 @@
 group 'sa.arco.hyperpay'
 version '1.0-SNAPSHOT'
 buildscript {
-    ext.kotlin_version = '1.7.10'
+    ext.kotlin_version = '1.6.21'
     repositories {
         google()
         mavenCentral()
@@ -30,7 +30,9 @@ apply plugin: 'kotlin-android'
 android {
     compileSdkVersion 33
 
-   
+        sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
 
     kotlinOptions {
         jvmTarget = '1.8'
@@ -49,8 +51,6 @@ dependencies {
     implementation (name:"oppwa.mobile-4.9.0-release", ext:'aar')
     debugImplementation (name: "ipworks3ds_sdk", ext:'aar')
     releaseImplementation (name:"ipworks3ds_sdk_deploy", ext:'aar')
-    
-    
   //  implementation fileTree(dir: "libs", include: ["*.aar"])
     implementation "org.jetbrains.kotlin:kotlin-stdlib:1.7.0"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.3"
@@ -61,8 +61,6 @@ dependencies {
     implementation "com.google.android.material:material:1.6.1"
     implementation 'androidx.fragment:fragment-ktx:1.4.1'
     implementation "com.google.android.gms:play-services-wallet:19.1.0"
-
-    
 }
 
 
