@@ -16,29 +16,22 @@ import com.oppwa.mobile.connect.payment.card.*
 import com.oppwa.mobile.connect.provider.*
 
 
-/** HyperpayPlugin */
+
 class HyperpayPlugin : FlutterPlugin, MethodCallHandler, ITransactionListener, ActivityAware, ThreeDSWorkflowListener {
     private val TAG = "HyperpayPlugin"
-    //private val CUSTOM_TAB_PACKAGE_NAME = "com.android.chrome"
-
-    /// The MethodChannel that will the communication between Flutter and native Android
-    ///
-    /// This local reference serves to register the plugin with the Flutter Engine and unregister it
-    /// when the Flutter Engine is detached from the Activity
+   
     private lateinit var channel: MethodChannel
     private var channelResult: MethodChannel.Result? = null
 
     private var mActivity: Activity? = null
 
     private var paymentProvider: OppPaymentProvider? = null
-   // private var intent: Intent? = null
-
-    // Get the checkout ID from the endpoint on your server
+   
     private var checkoutID = ""
 
     private var paymentMode = ""
 
-    // Card details
+    
     private var brand = ""
     private var cardHolder: String = ""
     private var cardNumber: String = ""
@@ -50,21 +43,6 @@ class HyperpayPlugin : FlutterPlugin, MethodCallHandler, ITransactionListener, A
 
     private var shopperResultUrl: String = ""
 
-    // private var mCustomTabsClient: CustomTabsClient? = null;
-    // private var mCustomTabsIntent: CustomTabsIntent? = null;
-   // private var hiddenLifecycleReference: HiddenLifecycleReference? = null;
-
-    // used to store the result URL from ChromeCustomTabs intent
-   // private var redirectData = ""
-
-//    private val lifecycleObserver = LifecycleEventObserver { _, event ->
-//        if(event == Lifecycle.Event.ON_RESUME && (redirectData.isEmpty() && mCustomTabsIntent != null)) {
-//            Log.d(TAG, "Cancelling.")
-//            mCustomTabsIntent = null
-//            success("canceled")
-//        }
-//    }
-
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, "hyperpay")
         channel.setMethodCallHandler(this)
@@ -72,46 +50,26 @@ class HyperpayPlugin : FlutterPlugin, MethodCallHandler, ITransactionListener, A
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         mActivity = binding.activity;
-       // hiddenLifecycleReference = (binding.lifecycle as HiddenLifecycleReference)
-       // hiddenLifecycleReference?.lifecycle?.addObserver(lifecycleObserver)
 
-        // Remove any underscores from the application ID for Uri parsing
-        // NOTE: It's important to add your application ID as the scheme, followed by ".payments"
-        // without any underscores.
         shopperResultUrl = mActivity!!.packageName.replace("_", "")
         shopperResultUrl += ".payments"
 
-        // binding.addOnNewIntentListener {
-        //     if (it.scheme?.equals(shopperResultUrl, ignoreCase = true) == true) {
-        //         redirectData = it.scheme.toString()
-
-        //         Log.d(TAG, "Success, redirecting to app...")
-        //         success("success")
-        //     }
-        //     true
-        // }
+       
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
-       // hiddenLifecycleReference?.lifecycle?.removeObserver(lifecycleObserver)
     }
 
     override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
-       // hiddenLifecycleReference = (binding.lifecycle as HiddenLifecycleReference)
-       // hiddenLifecycleReference?.lifecycle?.addObserver(lifecycleObserver)
+       
     }
 
     override fun onDetachedFromActivity() {
-        // if (intent != null) {
-        //     mActivity!!.stopService(intent)
-        // }
-
-       // hiddenLifecycleReference?.lifecycle?.removeObserver(lifecycleObserver)
-       // hiddenLifecycleReference = null
+   
         mActivity = null
     }
 
-    // Handling result options
+    
     private val handler: Handler = Handler(Looper.getMainLooper())
 
     private fun success(result: Any?) {
@@ -122,16 +80,7 @@ class HyperpayPlugin : FlutterPlugin, MethodCallHandler, ITransactionListener, A
         handler.post { channelResult!!.error(errorCode, errorMessage, errorDetails) }
     }
 
-    // private var cctConnection: CustomTabsServiceConnection = object : CustomTabsServiceConnection() {
-    //     override fun onCustomTabsServiceConnected(name: ComponentName, client: CustomTabsClient) {
-    //         mCustomTabsClient = client
-    //         mCustomTabsClient?.warmup(0L)
-    //     }
-
-    //     override fun onServiceDisconnected(name: ComponentName) {
-    //         mCustomTabsClient = null
-    //     }
-    // }
+   
 
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
       
