@@ -50,12 +50,12 @@ class _MyAppState extends State<MyApp> {
   Future<void> pay() async {
     await _hyperpayPlugin.payTransaction(
         CardData(
-            holder: 'hehe',
+            holder: 'Test user ',
             cardNumber: '4200000000000000',
-            cvv: '123',
-            expiryMonth: '12',
+            cvv: '457',
+            expiryMonth: '06',
             expiryYear: '2027'),
-        '12se54512',
+        '022AF636CF8D9B1E8EE44C1CEF53989B.uat01-vm-tx01',
         'VISA');
   }
 

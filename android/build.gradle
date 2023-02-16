@@ -33,7 +33,10 @@ android {
         sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
-
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
     kotlinOptions {
         jvmTarget = '1.8'
     }
@@ -49,7 +52,7 @@ android {
 }
 dependencies {
     implementation (name:"oppwa.mobile-4.9.0-release", ext:'aar')
-    debugImplementation (name: "ipworks3ds_sdk", ext:'aar')
+    implementation (name: "ipworks3ds_sdk", ext:'aar')
     releaseImplementation (name:"ipworks3ds_sdk_deploy", ext:'aar')
   //  implementation fileTree(dir: "libs", include: ["*.aar"])
     implementation "org.jetbrains.kotlin:kotlin-stdlib:1.7.0"
