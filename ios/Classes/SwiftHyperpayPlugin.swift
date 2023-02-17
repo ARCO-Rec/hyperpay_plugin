@@ -83,7 +83,7 @@ public class SwiftHyperpayPlugin: UINavigationController, FlutterPlugin, SFSafar
     
     
     public static func register(with registrar: FlutterPluginRegistrar) {
-        let channel = FlutterMethodChannel(name: "plugins.nyartech.com/hyperpay", binaryMessenger: registrar.messenger())
+        let channel = FlutterMethodChannel(name: "hyperpay", binaryMessenger: registrar.messenger())
         let instance = SwiftHyperpayPlugin()
         let buttonFactory = ApplePayButtonViewFactory(messenger: registrar.messenger())
 
@@ -103,7 +103,7 @@ public class SwiftHyperpayPlugin: UINavigationController, FlutterPlugin, SFSafar
     
         }
         
-        registrar.register(buttonFactory, withId: "plugins.nyartech.com/hyperpay/apple_pay_button")
+        registrar.register(buttonFactory, withId: "hyperpay/apple_pay_button")
         registrar.addMethodCallDelegate(instance, channel: channel)
         registrar.addApplicationDelegate(instance)
     }

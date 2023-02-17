@@ -49,7 +49,7 @@ class ApplePayButtonViewFactory: NSObject, FlutterPlatformViewFactory {
 class ApplePayButtonView: NSObject, FlutterPlatformView {
   
   /// Button channel.
-  static let buttonMethodChannelName = "plugins.nyartech.com/hyperpay/apple_pay_button"
+  static let buttonMethodChannelName = "hyperpay/apple_pay_button"
   
   /// Holds the actual view with the contents to be send back to Flutter.
   private var _view: UIView
