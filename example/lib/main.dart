@@ -49,7 +49,7 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> pay() async {
     // await _hyperpayPlugin.payTransaction(
-    //     CardData(
+    //     CardInfo(
     //         holder: 'Test user ',
     //         cardNumber: '4200000000000000',
     //         cvv: '457',

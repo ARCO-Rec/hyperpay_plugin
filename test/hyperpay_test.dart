@@ -10,7 +10,7 @@ class MockHyperpayPlatform
 
   @override
   Future<void> payTransaction(
-      CardData card, String checkoutID, String brand, String mode) {
+      CardInfo card, String checkoutID, String brand, String mode) {
     // TODO: implement payTransaction
     throw UnimplementedError();
   }

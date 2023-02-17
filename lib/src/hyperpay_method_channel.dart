@@ -15,7 +15,7 @@ class MethodChannelHyperpay extends HyperpayPlatform {
 
   @override
   Future<void> payTransaction(
-      CardData card, String checkoutID, String brand, String mode) async {
+      CardInfo card, String checkoutID, String brand, String mode) async {
     await methodChannel.invokeMethod<String>('start_payment', {
       'checkoutID': checkoutID,
       'brand': brand,

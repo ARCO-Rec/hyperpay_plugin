@@ -6,7 +6,7 @@ class Hyperpay {
   }
 
   Future<void> payTransaction(
-      {required CardData card,
+      {required CardInfo card,
       required String checkoutID,
       required BrandType brand,
       required PaymentMode mode}) {
