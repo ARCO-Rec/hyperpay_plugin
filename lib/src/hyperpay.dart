@@ -10,7 +10,7 @@ class Hyperpay {
       required String checkoutID,
       required BrandType brand,
       required PaymentMode mode}) {
-    return HyperpayPlatform.instance
-        .payTransaction(card, checkoutID, brand.name.toUpperCase(), mode.name);
+    return HyperpayPlatform.instance.payTransaction(
+        card, checkoutID, brand.name.toUpperCase(), mode.string);
   }
 }

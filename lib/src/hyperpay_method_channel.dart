@@ -20,6 +20,7 @@ class MethodChannelHyperpay extends HyperpayPlatform {
       'checkoutID': checkoutID,
       'brand': brand,
       'card': card.toMap(),
+      'mode': mode
     });
   }
 }
