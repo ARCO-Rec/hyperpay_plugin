@@ -1,3 +1,5 @@
+// ignore_for_file: unnecessary_this, no_leading_underscores_for_local_identifiers
+
 part of hyperpay;
 
 enum PaymentMode {

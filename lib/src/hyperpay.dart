@@ -1,16 +1,17 @@
 part of hyperpay;
 
-class Hyperpay {
-  Future<String?> getPlatformVersion() {
-    return HyperpayPlatform.instance.getPlatformVersion();
-  }
+class HyperpayPlugin {
+  HyperpayPlugin._();
 
-  Future<void> payTransaction(
-      {required CardInfo card,
-      required String checkoutID,
-      required BrandType brand,
-      required PaymentMode mode}) {
-    return HyperpayPlatform.instance.payTransaction(
-        card, checkoutID, brand.name.toUpperCase(), mode.string);
+  static const MethodChannel _channel = MethodChannel('hyperpay');
+
+  static Future<void> pay(CardInfo card, String checkoutID, BrandType brand,
+      PaymentMode mode) async {
+    await _channel.invokeMethod<String>('start_payment', {
+      'checkoutID': checkoutID,
+      'brand': brand.name.toUpperCase(),
+      'card': card.toMap(),
+      'mode': mode.string,
+    });
   }
 }
