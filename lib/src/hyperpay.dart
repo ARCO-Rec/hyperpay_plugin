@@ -1,11 +1,10 @@
 part of hyperpay;
 
 class HyperpayPlugin {
-  HyperpayPlugin._();
+  final MethodChannel _channel;
+  const HyperpayPlugin() : _channel = const MethodChannel('hyperpay');
 
-  static const MethodChannel _channel = MethodChannel('hyperpay');
-
-  static Future<void> pay(CardInfo card, String checkoutID, BrandType brand,
+  Future<void> pay(CardInfo card, String checkoutID, BrandType brand,
       PaymentMode mode) async {
     await _channel.invokeMethod<String>('start_payment', {
       'checkoutID': checkoutID,
