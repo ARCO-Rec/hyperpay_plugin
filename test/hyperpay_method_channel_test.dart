@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hyperpay/hyperpay_method_channel.dart';
+import 'package:hyperpay/hyperpay.dart';
 
 void main() {
   MethodChannelHyperpay platform = MethodChannelHyperpay();

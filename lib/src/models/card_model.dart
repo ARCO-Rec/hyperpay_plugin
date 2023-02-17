@@ -1,3 +1,5 @@
+part of hyperpay;
+
 class CardData {
   final String holder;
   final String cardNumber;

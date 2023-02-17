@@ -1,7 +1,4 @@
-import 'package:hyperpay/models/card_model.dart';
-import 'package:plugin_platform_interface/plugin_platform_interface.dart';
-
-import 'hyperpay_method_channel.dart';
+part of hyperpay;
 
 abstract class HyperpayPlatform extends PlatformInterface {
   /// Constructs a HyperpayPlatform.

@@ -1,3 +1,5 @@
+part of hyperpay;
+
 enum PaymentMode {
   /// Use the test mode in your development environment.
   test,

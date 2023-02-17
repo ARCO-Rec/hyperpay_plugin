@@ -1,8 +1,4 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
-import 'package:hyperpay/models/card_model.dart';
-
-import 'hyperpay_platform_interface.dart';
+part of hyperpay;
 
 /// An implementation of [HyperpayPlatform] that uses method channels.
 class MethodChannelHyperpay extends HyperpayPlatform {

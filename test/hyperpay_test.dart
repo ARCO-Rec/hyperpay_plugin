@@ -1,8 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hyperpay/hyperpay.dart';
-import 'package:hyperpay/hyperpay_method_channel.dart';
-import 'package:hyperpay/hyperpay_platform_interface.dart';
-import 'package:hyperpay/models/card_model.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 class MockHyperpayPlatform
