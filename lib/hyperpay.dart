@@ -7,7 +7,10 @@ class Hyperpay {
     return HyperpayPlatform.instance.getPlatformVersion();
   }
 
-  Future<void> payTransaction(CardData card, String checkoutID, String brand) {
+  Future<void> payTransaction(
+      {required CardData card,
+      required String checkoutID,
+      required String brand}) {
     return HyperpayPlatform.instance.payTransaction(card, checkoutID, brand);
   }
 }
