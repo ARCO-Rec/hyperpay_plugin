@@ -28,7 +28,8 @@ abstract class HyperpayPlatform extends PlatformInterface {
     throw UnimplementedError('platformVersion() has not been implemented.');
   }
 
-  Future<void> payTransaction(CardData card, String checkoutID, String brand) {
+  Future<void> payTransaction(
+      CardData card, String checkoutID, String brand, String mode) {
     throw UnimplementedError('platformVersion() has not been implemented.');
   }
 }

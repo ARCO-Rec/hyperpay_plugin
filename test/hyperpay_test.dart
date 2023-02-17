@@ -12,7 +12,8 @@ class MockHyperpayPlatform
   Future<String?> getPlatformVersion() => Future.value('42');
 
   @override
-  Future<void> payTransaction(CardData card, String checkoutID, String brand) {
+  Future<void> payTransaction(
+      CardData card, String checkoutID, String brand, String mode) {
     // TODO: implement payTransaction
     throw UnimplementedError();
   }
