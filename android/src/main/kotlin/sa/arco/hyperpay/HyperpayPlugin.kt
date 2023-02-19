@@ -129,16 +129,14 @@ class HyperpayPlugin : FlutterPlugin, MethodCallHandler, ITransactionListener, A
                 expiryYear = (card["expiryYear"] as String?)!!
                 cvv = (card["cvv"] as String?)!!
                 paymentProvider = OppPaymentProvider(mActivity!!.application, Connect.ProviderMode.TEST);
-
+                paymentMode= (card["mode"] as String?)!!
                 paymentProvider!!.setThreeDSWorkflowListener{mActivity}
 
     //                val checkoutSettings = CheckoutSettings(
     //           checkoutID,
     //     PAYMENT_BRANDS, Connect.ProviderMode.TEST
     //   ). setShopperResultUrl("$shopperResultUrl://arco.sa")
-              println("test  ${brand}")
-             println("test  ${cardHolder}")
-             println("test  ${checkoutID}")
+           
               
                    
                   
@@ -160,6 +158,9 @@ class HyperpayPlugin : FlutterPlugin, MethodCallHandler, ITransactionListener, A
                         try {
                             val transaction = Transaction(paymentParams)
                             paymentProvider?.submitTransaction(transaction, this)
+                            println("test  ${brand}")
+                            println("test  ${paymentMode}")
+                            println("test  ${checkoutID}")
                         } catch (e: PaymentException) {
                             result.error(
                                     "0.2",
@@ -252,6 +253,7 @@ class HyperpayPlugin : FlutterPlugin, MethodCallHandler, ITransactionListener, A
                 mCustomTabsIntent?.launchUrl(mActivity!!, uri)
             }
         } catch (e: Exception) {
+            Log.d(TAG, " exception ${e.message}")
             e.printStackTrace()
 
             
@@ -260,6 +262,8 @@ class HyperpayPlugin : FlutterPlugin, MethodCallHandler, ITransactionListener, A
     }
 
     override fun transactionFailed(transaction: Transaction, error: PaymentError) {
+        Log.d(TAG, " errorrr ${error.errorMessage}")
+        Log.d(TAG, " errorrr ${error.errorInfo}")
         error(
                 "${error.errorCode}",
                 error.errorMessage,
