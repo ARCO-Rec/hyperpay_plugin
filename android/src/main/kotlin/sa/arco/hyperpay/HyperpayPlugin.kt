@@ -72,6 +72,15 @@ class HyperpayPlugin : FlutterPlugin, MethodCallHandler, ITransactionListener, A
 
         shopperResultUrl = mActivity!!.packageName.replace("_", "")
         shopperResultUrl += ".payments"
+          binding.addOnNewIntentListener {
+            if (it.scheme?.equals(shopperResultUrl, ignoreCase = true) == true) {
+                redirectData = it.scheme.toString()
+
+                Log.d(TAG, "Success, redirecting to app...")
+                success("success")
+            }
+            true
+        }
 
        
     }
