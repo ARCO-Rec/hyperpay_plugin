@@ -127,7 +127,7 @@ class HyperpayPlugin : FlutterPlugin, MethodCallHandler, ITransactionListener, A
                         )
 
                        
-                        paymentParams.shopperResultUrl = "$shopperResultUrl://result"
+                        paymentParams.shopperResultUrl = "$shopperResultUrl://arco.sa"
 
                         try {
                             val transaction = Transaction(paymentParams)
