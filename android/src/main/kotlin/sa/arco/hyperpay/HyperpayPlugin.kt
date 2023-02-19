@@ -1,8 +1,15 @@
 package sa.arco.hyperpay
 import android.app.Activity
+import android.content.Intent
+import android.net.Uri
 import android.os.*
 import android.util.Log
 import androidx.annotation.NonNull
+import androidx.browser.customtabs.CustomTabsCallback
+import androidx.browser.customtabs.CustomTabsClient
+import androidx.browser.customtabs.CustomTabsIntent
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -14,7 +21,7 @@ import com.oppwa.mobile.connect.exception.*
 import com.oppwa.mobile.connect.payment.*
 import com.oppwa.mobile.connect.payment.card.*
 import com.oppwa.mobile.connect.provider.*
-
+import io.flutter.embedding.engine.plugins.lifecycle.HiddenLifecycleReference
 
 
 class HyperpayPlugin : FlutterPlugin, MethodCallHandler, ITransactionListener, ActivityAware, ThreeDSWorkflowListener {
@@ -42,6 +49,18 @@ class HyperpayPlugin : FlutterPlugin, MethodCallHandler, ITransactionListener, A
     val PAYMENT_BRANDS = hashSetOf("VISA", "MASTER", "MADA")
 
     private var shopperResultUrl: String = ""
+    private var redirectData = ""
+    private var mCustomTabsClient: CustomTabsClient? = null;
+    private var mCustomTabsIntent: CustomTabsIntent? = null;
+    private var hiddenLifecycleReference: HiddenLifecycleReference? = null;
+
+    private val lifecycleObserver = LifecycleEventObserver { _, event ->
+        if(event == Lifecycle.Event.ON_RESUME && (redirectData.isEmpty() )) {
+            Log.d(TAG, "Cancelling.")
+
+            success("canceled")
+        }
+    }
 
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, "hyperpay")
@@ -104,10 +123,10 @@ class HyperpayPlugin : FlutterPlugin, MethodCallHandler, ITransactionListener, A
 
                 paymentProvider!!.setThreeDSWorkflowListener{mActivity}
 
-                  //  val checkoutSettings = CheckoutSettings(
-           //    checkoutID,
-     //    PAYMENT_BRANDS, Connect.ProviderMode.TEST
-      // )
+    //                val checkoutSettings = CheckoutSettings(
+    //           checkoutID,
+    //     PAYMENT_BRANDS, Connect.ProviderMode.TEST
+    //   ). setShopperResultUrl("$shopperResultUrl://arco.sa")
               println("test  ${brand}")
              println("test  ${cardHolder}")
              println("test  ${checkoutID}")
@@ -199,6 +218,29 @@ class HyperpayPlugin : FlutterPlugin, MethodCallHandler, ITransactionListener, A
                 success("synchronous")
             } else {
       
+                Log.d(TAG, " async")
+                val uri = Uri.parse(transaction.redirectUrl)
+                redirectData = ""
+
+                val session = mCustomTabsClient?.newSession(object : CustomTabsCallback() {
+                    override fun onNavigationEvent(navigationEvent: Int, extras: Bundle?) {
+                        Log.w(TAG, "onNavigationEvent: Code = $navigationEvent")
+                        when (navigationEvent) {
+                            TAB_HIDDEN -> {
+                                if (redirectData.isEmpty()) {
+                                    mCustomTabsIntent = null
+                                    success("canceled")
+                                }
+                            }
+                        }
+                    }
+                })
+
+                val builder = CustomTabsIntent.Builder(session)
+                mCustomTabsIntent = builder.build()
+                mActivity?.intent?.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
+                mCustomTabsIntent?.intent?.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
+                mCustomTabsIntent?.launchUrl(mActivity!!, uri)
             }
         } catch (e: Exception) {
             e.printStackTrace()
