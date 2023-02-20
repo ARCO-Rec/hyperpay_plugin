@@ -75,7 +75,7 @@ class HyperpayPlugin : FlutterPlugin, MethodCallHandler, ITransactionListener, A
     }
 
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-        channel = MethodChannel(flutterPluginBinding.binaryMessenger, "plugins.nyartech.com/hyperpay")
+        channel = MethodChannel(flutterPluginBinding.binaryMessenger, "hyperpay")
         channel.setMethodCallHandler(this)
     }
 
