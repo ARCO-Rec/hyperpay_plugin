@@ -1,15 +1,17 @@
 package sa.arco.hyperpay
+
+import java.util.*
 import android.app.Activity
-import android.content.Intent
-import android.net.Uri
+import android.content.*
 import android.os.*
+import android.net.Uri
 import android.util.Log
+
 import androidx.annotation.NonNull
-import androidx.browser.customtabs.CustomTabsCallback
-import androidx.browser.customtabs.CustomTabsClient
-import androidx.browser.customtabs.CustomTabsIntent
+import androidx.browser.customtabs.*
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -17,62 +19,78 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
+import io.flutter.embedding.engine.plugins.lifecycle.HiddenLifecycleReference
+
 import com.oppwa.mobile.connect.exception.*
 import com.oppwa.mobile.connect.payment.*
 import com.oppwa.mobile.connect.payment.card.*
 import com.oppwa.mobile.connect.provider.*
-import io.flutter.embedding.engine.plugins.lifecycle.HiddenLifecycleReference
 
 
+/** HyperpayPlugin */
 class HyperpayPlugin : FlutterPlugin, MethodCallHandler, ITransactionListener, ActivityAware, ThreeDSWorkflowListener {
     private val TAG = "HyperpayPlugin"
-   
+    private val CUSTOM_TAB_PACKAGE_NAME = "com.android.chrome"
+
+    /// The MethodChannel that will the communication between Flutter and native Android
+    ///
+    /// This local reference serves to register the plugin with the Flutter Engine and unregister it
+    /// when the Flutter Engine is detached from the Activity
     private lateinit var channel: MethodChannel
     private var channelResult: MethodChannel.Result? = null
 
     private var mActivity: Activity? = null
 
     private var paymentProvider: OppPaymentProvider? = null
-   
+    private var intent: Intent? = null
+
+    // Get the checkout ID from the endpoint on your server
     private var checkoutID = ""
 
     private var paymentMode = ""
 
-    
-    private var brand = ""
+    // Card details
+    private var brand = Brand.UNKNOWN
     private var cardHolder: String = ""
     private var cardNumber: String = ""
     private var expiryMonth: String = ""
     private var expiryYear: String = ""
     private var cvv: String = ""
 
-    val PAYMENT_BRANDS = hashSetOf("VISA", "MASTER", "MADA")
-
     private var shopperResultUrl: String = ""
-    private var redirectData = ""
+
     private var mCustomTabsClient: CustomTabsClient? = null;
     private var mCustomTabsIntent: CustomTabsIntent? = null;
     private var hiddenLifecycleReference: HiddenLifecycleReference? = null;
 
-    private val lifecycleObserver = LifecycleEventObserver { _, event ->
-        if(event == Lifecycle.Event.ON_RESUME && (redirectData.isEmpty() )) {
-            Log.d(TAG, "Cancelling.")
+    // used to store the result URL from ChromeCustomTabs intent
+    private var redirectData = ""
 
+    private val lifecycleObserver = LifecycleEventObserver { _, event ->
+        if(event == Lifecycle.Event.ON_RESUME && (redirectData.isEmpty() && mCustomTabsIntent != null)) {
+            Log.d(TAG, "Cancelling.")
+            mCustomTabsIntent = null
             success("canceled")
         }
     }
 
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-        channel = MethodChannel(flutterPluginBinding.binaryMessenger, "hyperpay")
+        channel = MethodChannel(flutterPluginBinding.binaryMessenger, "plugins.nyartech.com/hyperpay")
         channel.setMethodCallHandler(this)
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         mActivity = binding.activity;
+        hiddenLifecycleReference = (binding.lifecycle as HiddenLifecycleReference)
+        hiddenLifecycleReference?.lifecycle?.addObserver(lifecycleObserver)
 
+        // Remove any underscores from the application ID for Uri parsing
+        // NOTE: It's important to add your application ID as the scheme, followed by ".payments"
+        // without any underscores.
         shopperResultUrl = mActivity!!.packageName.replace("_", "")
         shopperResultUrl += ".payments"
-          binding.addOnNewIntentListener {
+
+        binding.addOnNewIntentListener {
             if (it.scheme?.equals(shopperResultUrl, ignoreCase = true) == true) {
                 redirectData = it.scheme.toString()
 
@@ -81,23 +99,28 @@ class HyperpayPlugin : FlutterPlugin, MethodCallHandler, ITransactionListener, A
             }
             true
         }
-
-       
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
+        hiddenLifecycleReference?.lifecycle?.removeObserver(lifecycleObserver)
     }
 
     override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
-       
+        hiddenLifecycleReference = (binding.lifecycle as HiddenLifecycleReference)
+        hiddenLifecycleReference?.lifecycle?.addObserver(lifecycleObserver)
     }
 
     override fun onDetachedFromActivity() {
-   
+        if (intent != null) {
+            mActivity!!.stopService(intent)
+        }
+
+        hiddenLifecycleReference?.lifecycle?.removeObserver(lifecycleObserver)
+        hiddenLifecycleReference = null
         mActivity = null
     }
 
-    
+    // Handling result options
     private val handler: Handler = Handler(Looper.getMainLooper())
 
     private fun success(result: Any?) {
@@ -108,19 +131,52 @@ class HyperpayPlugin : FlutterPlugin, MethodCallHandler, ITransactionListener, A
         handler.post { channelResult!!.error(errorCode, errorMessage, errorDetails) }
     }
 
-   
+    private var cctConnection: CustomTabsServiceConnection = object : CustomTabsServiceConnection() {
+        override fun onCustomTabsServiceConnected(name: ComponentName, client: CustomTabsClient) {
+            mCustomTabsClient = client
+            mCustomTabsClient?.warmup(0L)
+        }
+
+        override fun onServiceDisconnected(name: ComponentName) {
+            mCustomTabsClient = null
+        }
+    }
 
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
-      
-          if (call.method == "getPlatformVersion") {
-            result.success("Android ${android.os.Build.VERSION.RELEASE}")
-          }
-       else if (call.method == "start_payment") {
+        when (call.method) {
+            "setup_service" -> {
+                try {
+                    val args: Map<String, Any> = call.arguments as Map<String, Any>
+
+                    paymentMode = args["mode"] as String
+                    var providerMode = Connect.ProviderMode.TEST;
+
+                    if(paymentMode == "LIVE") {
+                        providerMode =  Connect.ProviderMode.LIVE;
+                    }
+
+                    paymentProvider = OppPaymentProvider(mActivity!!.application, providerMode);
+
+                    // Set the 3DS listener
+                    paymentProvider!!.setThreeDSWorkflowListener{mActivity}
+
+                    // Bind CustomTabs service with the current app activity
+                    CustomTabsClient.bindCustomTabsService(mActivity!!, CUSTOM_TAB_PACKAGE_NAME, cctConnection);
+
+                    Log.d(TAG, "Payment mode is set to $paymentMode")
+                    result.success(null)
+                } catch (e: java.lang.Exception) {
+                    e.printStackTrace()
+
+                    result.error("", e.message, e.stackTrace)
+                }
+            }
+            "start_payment" -> {
                 channelResult = result
 
                 val args: Map<String, Any> = call.arguments as Map<String, Any>
                 checkoutID = (args["checkoutID"] as String?)!!
-                brand = (args["brand"] as String?)!!
+                brand = Brand.valueOf(args["brand"].toString())
 
                 val card: Map<String, Any> = args["card"] as Map<String, Any>
                 cardHolder = (card["holder"] as String?)!!
@@ -128,25 +184,20 @@ class HyperpayPlugin : FlutterPlugin, MethodCallHandler, ITransactionListener, A
                 expiryMonth = (card["expiryMonth"] as String?)!!
                 expiryYear = (card["expiryYear"] as String?)!!
                 cvv = (card["cvv"] as String?)!!
-                paymentProvider = OppPaymentProvider(mActivity!!.application, Connect.ProviderMode.TEST);
 
-                paymentProvider!!.setThreeDSWorkflowListener{mActivity}
-
-    //                val checkoutSettings = CheckoutSettings(
-    //           checkoutID,
-    //     PAYMENT_BRANDS, Connect.ProviderMode.TEST
-    //   ). setShopperResultUrl("$shopperResultUrl://arco.sa")
-              println("test  ${brand}")
-             println("test  ${cardHolder}")
-             println("test  ${checkoutID}")
-              
-                   
-                  
+                when (brand) {
+                    // If the brand is not provided it returns an error result
+                    Brand.UNKNOWN -> result.error(
+                            "0.1",
+                            "Please provide a valid brand",
+                            ""
+                    )
+                    else -> {
                         checkCreditCardValid(result)
 
                         val paymentParams: PaymentParams = CardPaymentParams(
                                 checkoutID,
-                                brand,
+                                brand.name,
                                 cardNumber,
                                 cardHolder,
                                 expiryMonth,
@@ -154,7 +205,7 @@ class HyperpayPlugin : FlutterPlugin, MethodCallHandler, ITransactionListener, A
                                 cvv
                         )
 
-                       
+                        //Set shopper result URL
                         paymentParams.shopperResultUrl = "$shopperResultUrl://arco.sa"
 
                         try {
@@ -167,22 +218,25 @@ class HyperpayPlugin : FlutterPlugin, MethodCallHandler, ITransactionListener, A
                                     ""
                             )
                         }
-                    
-                
+                    }
+                }
             }
-            else {
+            else -> {
                 result.notImplemented()
             }
-        
+        }
     }
 
 
-   
+    /**
+     * This function checks the provided card params and return
+     * a PlatformException to Flutter if any are not valid.
+     * */
     private fun checkCreditCardValid(result: Result) {
         if (!CardPaymentParams.isNumberValid(cardNumber)) {
             result.error(
                     "1.1",
-                    "Card number is not valid for brand $brand",
+                    "Card number is not valid for brand ${brand.name}",
                     ""
             )
         } else if (!CardPaymentParams.isHolderValid(cardHolder)) {
@@ -217,17 +271,11 @@ class HyperpayPlugin : FlutterPlugin, MethodCallHandler, ITransactionListener, A
     }
 
     override fun transactionCompleted(transaction: Transaction) {
-      Log.d(TAG, "transaction completed")
-
         try {
             if (transaction.transactionType == TransactionType.SYNC) {
-              Log.d(TAG, "success sync")
-
                 // Send request to your server to obtain transaction status
                 success("synchronous")
             } else {
-      
-                Log.d(TAG, " async")
                 val uri = Uri.parse(transaction.redirectUrl)
                 redirectData = ""
 
@@ -254,7 +302,7 @@ class HyperpayPlugin : FlutterPlugin, MethodCallHandler, ITransactionListener, A
         } catch (e: Exception) {
             e.printStackTrace()
 
-            
+            // Display error
             error("${e.message}️")
         }
     }

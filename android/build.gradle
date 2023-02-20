@@ -51,10 +51,9 @@ android {
     }
 }
 dependencies {
-    implementation (name:"oppwa.mobile-4.9.0-release", ext:'aar')
+   implementation (name:"oppwa.mobile-4.9.0-release", ext:'aar')
     debugImplementation (name: "ipworks3ds_sdk", ext:'aar')
     releaseImplementation (name:"ipworks3ds_sdk_deploy", ext:'aar')
-  //  implementation fileTree(dir: "libs", include: ["*.aar"])
     implementation "org.jetbrains.kotlin:kotlin-stdlib:1.7.0"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.3"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.3"

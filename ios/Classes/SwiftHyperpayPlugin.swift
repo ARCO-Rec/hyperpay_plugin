@@ -161,11 +161,11 @@ public class SwiftHyperpayPlugin: UINavigationController, FlutterPlugin, SFSafar
             
             let args = call.arguments as! Dictionary<String, Any>
             
-            paymentMode = args["mode"] as! String
+            // paymentMode = args["mode"] as! String
             
-            if(paymentMode == "LIVE") {
-                self.provider.mode = OPPProviderMode.live
-            }
+            // if(paymentMode == "LIVE") {
+            //     self.provider.mode = OPPProviderMode.live
+            // }
             let checkoutID = args["checkoutID"] as! String
             self.checkoutID = checkoutID
             
