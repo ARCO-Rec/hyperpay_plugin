@@ -7,6 +7,13 @@ class HyperpaySetupResult {
   const HyperpaySetupResult(this.success, this.msg);
 }
 
+class HyperpayPayResult {
+  final bool success;
+  final String msg;
+
+  const HyperpayPayResult(this.success, this.msg);
+}
+
 class HyperpayPlugin {
   final MethodChannel _channel;
   final PaymentMode mode;
@@ -23,15 +30,23 @@ class HyperpayPlugin {
       );
       return const HyperpaySetupResult(true, 'Hyperpay setup completed');
     } catch (e) {
-      return HyperpaySetupResult(false, 'Hyperpay setup faile: $e');
+      log(e.toString());
+      return HyperpaySetupResult(false, 'Hyperpay setup failed:\n $e');
     }
   }
 
-  Future<void> pay(CardInfo card, String checkoutID, BrandType brand) async {
-    await _channel.invokeMethod<String>('start_payment', {
-      'checkoutID': checkoutID,
-      'brand': brand.name.toUpperCase(),
-      'card': card.toMap(),
-    });
+  Future<HyperpayPayResult> pay(
+      CardInfo card, String checkoutID, BrandType brand) async {
+    try {
+      await _channel.invokeMethod<String>('start_payment', {
+        'checkoutID': checkoutID,
+        'brand': brand.name.toUpperCase(),
+        'card': card.toMap(),
+      });
+      return const HyperpayPayResult(true, 'Payment submitted');
+    } catch (e) {
+      log(e.toString());
+      return HyperpayPayResult(false, 'Payment could not be submitted:\n $e');
+    }
   }
 }
