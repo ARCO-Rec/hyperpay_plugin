@@ -4,6 +4,6 @@
     <application>
         <service
             android:name="com.oppwa.mobile.connect.service.ConnectService"
-            android:exported="false" />
+            android:exported="true" />
     </application>
 </manifest>

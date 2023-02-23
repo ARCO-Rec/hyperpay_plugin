@@ -80,7 +80,7 @@ class HyperpayPlugin : FlutterPlugin, MethodCallHandler, ITransactionListener, A
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
-        mActivity = binding.activity;
+        mActivity = binding.activity
         hiddenLifecycleReference = (binding.lifecycle as HiddenLifecycleReference)
         hiddenLifecycleReference?.lifecycle?.addObserver(lifecycleObserver)
 
