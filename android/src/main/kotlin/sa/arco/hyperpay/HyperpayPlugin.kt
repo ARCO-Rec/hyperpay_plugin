@@ -303,7 +303,7 @@ class HyperpayPlugin : FlutterPlugin, MethodCallHandler, ITransactionListener, A
             e.printStackTrace()
 
             // Display error
-            error("${e.message}️")
+            this.error("${e.hashCode()}", "${e.message}", "${e.stackTrace}")
         }
     }
 
