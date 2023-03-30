@@ -138,7 +138,7 @@ class ApplePayButton extends StatelessWidget {
 
 /// Draw the Apple Pay button through a [PlatforView].
 class _UiKitApplePayButton extends StatelessWidget {
-  static const buttonId = 'plugins.nyartech.com/hyperpay/apple_pay_button';
+  static const buttonId = 'hyperpay/apple_pay_button';
   late final MethodChannel? methodChannel;
 
   final VoidCallback? onPressed;
