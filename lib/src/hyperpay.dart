@@ -49,4 +49,39 @@ class HyperpayPlugin {
       return HyperpayPayResult(false, 'Payment could not be submitted:\n $e');
     }
   }
+
+  Future<HyperpayPayResult> payWithApplePay(
+      ApplePaySettings applePay, String checkoutID) async {
+    if (defaultTargetPlatform != TargetPlatform.iOS) {
+      return const HyperpayPayResult(
+        false,
+        'NOT_SUPPORTED_PLATFORM',
+      );
+    }
+
+    try {
+      final result = await _channel.invokeMethod(
+        'start_payment',
+        {
+          'checkoutID': checkoutID,
+          'brand': BrandType.applepay.name.toUpperCase(),
+          ...applePay.toJson(),
+        },
+      );
+
+      log('$result', name: "HyperpayPlugin/platformResponse");
+
+      if (result == 'canceled') {
+        return const HyperpayPayResult(
+          false,
+          'TRANSACTION CANCELLED',
+        );
+      }
+
+      return const HyperpayPayResult(true, 'Payment submitted');
+    } catch (e) {
+      log('$e', name: "HyperpayPlugin/payWithApplePay");
+      return HyperpayPayResult(false, 'Payment could not be submitted:\n $e');
+    }
+  }
 }
