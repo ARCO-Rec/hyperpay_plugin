@@ -52,7 +52,7 @@ class HyperpayPlugin {
 
   Future<HyperpayPayResult> payWithApplePay(
       ApplePaySettings applePay, String checkoutID) async {
-    if (defaultTargetPlatform != TargetPlatform.iOS) {
+    if (!Platform.isIOS) {
       return const HyperpayPayResult(
         false,
         'NOT_SUPPORTED_PLATFORM',
