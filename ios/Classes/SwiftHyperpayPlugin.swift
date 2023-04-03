@@ -58,7 +58,7 @@ public class SwiftHyperpayPlugin: UINavigationController, FlutterPlugin, SFSafar
     
     public func paymentAuthorizationViewControllerDidFinish(_ controller: PKPaymentAuthorizationViewController) {
         controller.dismiss(animated: true, completion: nil)
-        self.paymentResult!("canceled")
+        self.paymentResult!("canceled from paymentAuthorizationViewControllerDidFinish")
     }
     
     public func paymentAuthorizationViewController(_ controller: PKPaymentAuthorizationViewController, didAuthorizePayment payment: PKPayment, completion: @escaping (PKPaymentAuthorizationStatus) -> Void) {
@@ -122,11 +122,11 @@ public class SwiftHyperpayPlugin: UINavigationController, FlutterPlugin, SFSafar
     }
     
     public func safariViewControllerDidFinish(_ controller: SFSafariViewController) {
-        self.paymentResult!("canceled")
+        self.paymentResult!("canceled from safariViewControllerDidFinish")
     }
     
     public func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
-        self.paymentResult!("canceled")
+        self.paymentResult!("canceled from presentationControllerDidDismiss")
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -244,7 +244,7 @@ public class SwiftHyperpayPlugin: UINavigationController, FlutterPlugin, SFSafar
                     let errorCode = (error! as NSError).code
                     if(errorCode == 6000){
                         UIApplication.shared.delegate?.window??.rootViewController?.dismiss(animated: true)
-                        self.paymentResult!("canceled")
+                        self.paymentResult!("canceled from onCreditCard")
                     } else {
                         self.paymentResult!(
                             FlutterError(
