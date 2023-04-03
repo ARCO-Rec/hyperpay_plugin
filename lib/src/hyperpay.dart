@@ -71,7 +71,7 @@ class HyperpayPlugin {
 
       log('$result', name: "HyperpayPlugin/platformResponse");
 
-      if (result == 'canceled') {
+      if (result.toString().contains('canceled')) {
         return const HyperpayPayResult(
           false,
           'TRANSACTION CANCELLED',
