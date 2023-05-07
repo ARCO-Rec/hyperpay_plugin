@@ -308,7 +308,7 @@ public class SwiftHyperpayPlugin: UINavigationController, FlutterPlugin, SFSafar
         paymentRequest.currencyCode = self.currencyCode
         
         paymentRequest.paymentSummaryItems = [
-            PKPaymentSummaryItem(label: "Hyperpay",
+            PKPaymentSummaryItem(label: "ARCO",
                                  amount: NSDecimalNumber(value: self.amount))
         ]
         
