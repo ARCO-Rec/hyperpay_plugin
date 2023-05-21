@@ -1,8 +1,12 @@
+library hyperpay;
 
-import 'hyperpay_platform_interface.dart';
+import 'dart:developer';
+import 'dart:io';
 
-class Hyperpay {
-  Future<String?> getPlatformVersion() {
-    return HyperpayPlatform.instance.getPlatformVersion();
-  }
-}
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+part 'src/hyperpay.dart';
+part 'src/models/card_info.dart';
+part 'src/models/enums.dart';
