@@ -144,11 +144,11 @@ public class SwiftHyperpayPlugin: UINavigationController, FlutterPlugin, SFSafar
                                                               dsEncryptCert: DS_ENCRYPT_CERT,
                                                               dsCaRootCert: DS_ROOT_CA_CERT)
                 
-                OPPThreeDSService.sharedInstance.setCustomSchemeConfig(["VISA": visaSchemeConfig])
+                // OPPThreeDSService.sharedInstance.setCustomSchemeConfig(["VISA": visaSchemeConfig])
 
                 let paymentBrands = ["VISA"]
                 
-                OPPThreeDSService.sharedInstance.initialize(transactionMode: .test, paymentBrands: paymentBrands)
+                // OPPThreeDSService.sharedInstance.initialize(transactionMode: .test, paymentBrands: paymentBrands)
             }
 
             self.provider.threeDSEventListener = self
