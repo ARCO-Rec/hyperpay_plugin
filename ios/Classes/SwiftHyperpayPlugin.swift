@@ -35,7 +35,7 @@ public class SwiftHyperpayPlugin: UINavigationController, FlutterPlugin, SFSafar
     var paymentMode:String = ""
     
     /// A suffix added to the bundle ID of the client's app to form a complete `shopperResultURL`.
-    let shopperResultURLSuffix = ".payments://arco.sa";
+    let shopperResultURLSuffix = ".payments";
     
     public func onThreeDSChallengeRequired(completion: @escaping (UINavigationController) -> Void) {
         let rootViewController = UIApplication.shared.delegate?.window??.rootViewController as! UINavigationController
