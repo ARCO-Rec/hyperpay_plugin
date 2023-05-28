@@ -36,7 +36,7 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
     var Presult:FlutterResult?
 
   public static func register(with registrar: FlutterPluginRegistrar) {
-      let buttonFactory = ApplePayButtonViewFactory(messgenger:registrar.messenger())
+      let buttonFactory = ApplePayButtonViewFactory(messenger:registrar.messenger())
     let flutterChannel:String = "Hyperpay.demo.fultter/channel";
     let channel = FlutterMethodChannel(name: flutterChannel, binaryMessenger: registrar.messenger())
     let instance = SwiftPaymentPlugin()
