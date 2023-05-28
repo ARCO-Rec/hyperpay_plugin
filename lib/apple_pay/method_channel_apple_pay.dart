@@ -11,7 +11,16 @@ Future<PaymentResultData> implementApplePay({
     final String? result = await platform.invokeMethod(
       PaymentConst.methodCall,
       getApplePayModel(
-        settings: settings,
+        brands: [PaymentBrands.applePay],
+        checkoutId: settings.checkoutId,
+        countryCode: settings.countryCode,
+        companyName: settings.companyName,
+        currencyCode: settings.currencyCode,
+        lang: settings.lang,
+        merchantId: settings.merchantId,
+        setStorePaymentDetailsMode: false,
+        shopperResultUrl: '',
+        themColorHexIOS: settings.hexColor,
         paymentMode: paymentMode,
       ),
     );
@@ -24,11 +33,30 @@ Future<PaymentResultData> implementApplePay({
   }
 }
 
-Map<String, dynamic> getApplePayModel({
-  required ApplePaySettings settings,
-  required PaymentMode paymentMode,
-}) {
-  final map = settings.toJson();
-  map["mode"] = paymentMode.toString().split('.').last;
-  return map;
+Map<String, dynamic> getApplePayModel(
+    {required List<String> brands,
+    required String checkoutId,
+    required String shopperResultUrl,
+    required String lang,
+    required PaymentMode paymentMode,
+    required String merchantId,
+    required String countryCode,
+    required String currencyCode,
+    String? companyName = "",
+    String? themColorHexIOS,
+    required bool setStorePaymentDetailsMode}) {
+  return {
+    "type": PaymentConst.readyUi,
+    "mode": paymentMode.toString().split('.').last,
+    "checkoutid": checkoutId,
+    "brand": brands,
+    "lang": lang,
+    "merchantId": merchantId,
+    "CountryCode": countryCode,
+    "currencyCode": currencyCode,
+    "companyName": companyName ?? "",
+    "themColorHexIOS": themColorHexIOS ?? "",
+    "ShopperResultUrl": shopperResultUrl,
+    "setStorePaymentDetailsMode": setStorePaymentDetailsMode.toString(),
+  };
 }

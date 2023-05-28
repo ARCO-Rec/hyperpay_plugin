@@ -30,13 +30,13 @@ class ApplePaySettings {
   Map<String, dynamic> toJson() {
     return {
       "type": paymentType,
-      "checkoutId": checkoutId,
+      "checkoutid": checkoutId,
       "merchantId": merchantId,
       "countryCode": countryCode,
       "currencyCode": currencyCode,
       "companyName": companyName,
       "lang": lang,
-      "hexColor": hexColor,
+      "themColorHexIOS": hexColor,
     };
   }
 }
