@@ -2,7 +2,7 @@ import Flutter
 import UIKit
 import SafariServices
 
-public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerDelegate, OPPCheckoutProviderDelegate  {
+public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerDelegate, OPPCheckoutProviderDelegate,PKPaymentAuthorizationViewControllerDelegate  {
     var type:String = "";
     var mode:String = "";
     var checkoutid:String = "";
@@ -20,7 +20,8 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
     var shopperResultURL:String = "";
     var tokenID:String = "";
     var payTypeSotredCard:String = "";
-    var applePaybundel:String = "";
+    var applePaybundel:String = ""; // deprecated use merchantId instead
+    var merchantId:String="";
     var countryCode:String = "";
     var currencyCode:String = "";
     var setStorePaymentDetailsMode:String = "";
@@ -35,9 +36,11 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
     var Presult:FlutterResult?
 
   public static func register(with registrar: FlutterPluginRegistrar) {
+      let buttonFactory = ApplePayButtonViewFactory(messgenger:registrar.messenger())
     let flutterChannel:String = "Hyperpay.demo.fultter/channel";
     let channel = FlutterMethodChannel(name: flutterChannel, binaryMessenger: registrar.messenger())
     let instance = SwiftPaymentPlugin()
+      registrar.register(buttonFactory, withId: "hyperpay/apple_pay_button")
     registrar.addApplicationDelegate(instance)
     registrar.addMethodCallDelegate(instance, channel: channel)
 
@@ -45,7 +48,9 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
 
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         self.Presult = result
-
+        
+        
+       
         if call.method == "gethyperpayresponse"{
             let args = call.arguments as? Dictionary<String,Any>
             self.type = (args!["type"] as? String)!
@@ -53,36 +58,81 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
             self.checkoutid = (args!["checkoutid"] as? String)!
             self.shopperResultURL = (args!["ShopperResultUrl"] as? String)!
             self.lang=(args!["lang"] as? String)!
+            if self.mode == "live" {
+                self.provider = OPPPaymentProvider(mode: OPPProviderMode.live)
+            }else{
+                self.provider = OPPPaymentProvider(mode: OPPProviderMode.test)
+            }
+            switch self.type{
+                case"ReadyUI" :
+                    self.applePaybundel=(args!["merchantId"] as? String)!
+                    self.countryCode=(args!["CountryCode"] as? String)!
+                    self.companyName=(args!["companyName"] as? String)!
+                    self.brandsReadyUi = (args!["brand"]) as! [String]
+                    self.themColorHex=(args!["themColorHexIOS"] as? String)!
 
-            if self.type == "ReadyUI" {
-                self.applePaybundel=(args!["merchantId"] as? String)!
-                self.countryCode=(args!["CountryCode"] as? String)!
-                self.companyName=(args!["companyName"] as? String)!
-                self.brandsReadyUi = (args!["brand"]) as! [String]
-                self.themColorHex=(args!["themColorHexIOS"] as? String)!
-
-                self.setStorePaymentDetailsMode=(args!["setStorePaymentDetailsMode"] as? String )!
-                DispatchQueue.main.async {
-                    self.openCheckoutUI(checkoutId: self.checkoutid, result1: result)
+                    self.setStorePaymentDetailsMode=(args!["setStorePaymentDetailsMode"] as? String )!
+                    DispatchQueue.main.async {
+                        self.openCheckoutUI(checkoutId: self.checkoutid, result1: result)
+                    }
+                case "APPLEPAY":
+                    self.merchantId=(args!["merchantId"] as? String)!
+                    self.countryCode=(args!["countryCode"] as? String)!
+                    self.companyName=(args!["companyName"] as? String)!
+                    self.currencyCode=(args!["currencyCode"] as? String)!
+                    DispatchQueue.main.async {
+                    self.showApplePay(checkoutId: self.checkoutid,result1:result)
                 }
+                default:
+                    result(FlutterError(code: "1", message: "Method name is not found", details: ""))
             }
-            else {
-                result(FlutterError(code: "1", message: "Method name is not found", details: ""))
-            }
+       
+        
 
         } else {
                 result(FlutterError(code: "1", message: "Method name is not found", details: ""))
             }
         }
 
+    private func showApplePay(checkoutId: String,result1:@escaping FlutterResult){
+        let paymentRequest = OPPPaymentProvider.paymentRequest(withMerchantIdentifier: self.applePaybundel, countryCode: self.countryCode)
+        paymentRequest.currencyCode = self.currencyCode
+        paymentRequest.paymentSummaryItems = [PKPaymentSummaryItem(label: self.companyName, amount: NSDecimalNumber(value: self.amount))]
 
+        if #available(iOS 12.1.1, *) {
+            paymentRequest.supportedNetworks = [ PKPaymentNetwork.mada,PKPaymentNetwork.visa, PKPaymentNetwork.masterCard ]
+        }
+        else {
+            // Fallback on earlier versions
+            paymentRequest.supportedNetworks = [ PKPaymentNetwork.visa, PKPaymentNetwork.masterCard ]
+        }
+        let checkoutSettings = OPPCheckoutSettings()
+        checkoutSettings.applePayPaymentRequest = paymentRequest
+        checkoutSettings.language = self.lang
+        
+        if OPPPaymentProvider.canSubmitPaymentRequest(paymentRequest){
+            if let vc = PKPaymentAuthorizationViewController( paymentRequest:paymentRequest ) as PKPaymentAuthorizationViewController?{
+                vc.delegate = self
+                UIApplication.shared.windows.first?.rootViewController?.present(vc, animated: true,completion:nil)
+                DispatchQueue.main.async {
+                                         result1("SYNC")
+                                     }
+                
+            }else{
+                result1(FlutterError.init(code: "1",message: "Error : Appe Pay not supported",details: nil))
+                
+            }
+        }
+        
+       // checkoutSettings.paymentBrands = ["APPLEPAY"]
+    }
     private func openCheckoutUI(checkoutId: String,result1: @escaping FlutterResult) {
 
-         if self.mode == "live" {
-             self.provider = OPPPaymentProvider(mode: OPPProviderMode.live)
-         }else{
-             self.provider = OPPPaymentProvider(mode: OPPProviderMode.test)
-         }
+//         if self.mode == "live" {
+//             self.provider = OPPPaymentProvider(mode: OPPProviderMode.live)
+//         }else{
+//             self.provider = OPPPaymentProvider(mode: OPPProviderMode.test)
+//         }
          DispatchQueue.main.async{
 
              let checkoutSettings = OPPCheckoutSettings()
@@ -111,38 +161,56 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
              self.setThem(checkoutSettings: checkoutSettings, hexColorString: self.themColorHex)
              self.checkoutProvider = OPPCheckoutProvider(paymentProvider: self.provider, checkoutID: checkoutId, settings: checkoutSettings)!
              self.checkoutProvider?.delegate = self
-             self.checkoutProvider?.presentCheckout(forSubmittingTransactionCompletionHandler: {
-                 (transaction, error) in
-                 guard let transaction = transaction else {
-                     // Handle invalid transaction, check error
-                     // result1("error")
-                     result1(FlutterError.init(code: "1",message: "Error: " + self.transaction.debugDescription,details: nil))
-                     return
-                 }
-                 self.transaction = transaction
-                 if transaction.type == .synchronous {
-                     // If a transaction is synchronous, just request the payment status
-                     // You can use transaction.resourcePath or just checkout ID to do it
-                     DispatchQueue.main.async {
-                         result1("SYNC")
+             self.checkoutProvider?.presentCheckout(withPaymentBrand: "CARD",
+                loadingHandler: { (inProgress) in
+                 // Executed whenever SDK sends request to the server or receives the answer.
+                 // You can start or stop loading animation based on inProgress parameter.
+             }, completionHandler: { (transaction, error) in
+                 if error != nil {
+                     // See code attribute (OPPErrorCode) and NSLocalizedDescription to identify the reason of failure.
+                 } else {
+                     if transaction?.redirectURL != nil {
+                         // Shopper was redirected to the issuer web page.
+                         // Request payment status when shopper returns to the app using transaction.resourcePath or just checkout id.
+                     } else {
+                         // Request payment status for the synchronous transaction from your server using transactionPath.resourcePath or just checkout id.
                      }
                  }
-                 else if transaction.type == .asynchronous {
-                     NotificationCenter.default.addObserver(self, selector: #selector(self.didReceiveAsynchronousPaymentCallback), name: Notification.Name(rawValue: "AsyncPaymentCompletedNotificationKey"), object: nil)
-                 }
-                 else {
-                     // result1("error")
-                     result1(FlutterError.init(code: "1",message:"Error : operation cancel",details: nil))
-                     // Executed in case of failure of the transaction for any reason
-                     print(self.transaction.debugDescription)
-                 }
-             }
-                                                    , cancelHandler: {
-                                                    // result1("error")
-                                                     result1(FlutterError.init(code: "1",message: "Error : operation cancel",details: nil))
-                                                        // Executed if the shopper closes the payment page prematurely
-                                                        print(self.transaction.debugDescription)
-                                                    })
+             }, cancelHandler: {
+                 // Executed if the shopper closes the payment page prematurely.
+             })
+//             self.checkoutProvider?.presentCheckout(forSubmittingTransactionCompletionHandler: {
+//                 (transaction, error) in
+//                 guard let transaction = transaction else {
+//                     // Handle invalid transaction, check error
+//                     // result1("error")
+//                     result1(FlutterError.init(code: "1",message: "Error: " + self.transaction.debugDescription,details: nil))
+//                     return
+//                 }
+//                 self.transaction = transaction
+//                 if transaction.type == .synchronous {
+//                     // If a transaction is synchronous, just request the payment status
+//                     // You can use transaction.resourcePath or just checkout ID to do it
+//                     DispatchQueue.main.async {
+//                         result1("SYNC")
+//                     }
+//                 }
+//                 else if transaction.type == .asynchronous {
+//                     NotificationCenter.default.addObserver(self, selector: #selector(self.didReceiveAsynchronousPaymentCallback), name: Notification.Name(rawValue: "AsyncPaymentCompletedNotificationKey"), object: nil)
+//                 }
+//                 else {
+//                     // result1("error")
+//                     result1(FlutterError.init(code: "1",message:"Error : operation cancel",details: nil))
+//                     // Executed in case of failure of the transaction for any reason
+//                     print(self.transaction.debugDescription)
+//                 }
+//             }
+//                                                    , cancelHandler: {
+//                                                    // result1("error")
+//                                                     result1(FlutterError.init(code: "1",message: "Error : operation cancel",details: nil))
+//                                                        // Executed if the shopper closes the payment page prematurely
+//                                                        print(self.transaction.debugDescription)
+//                                                    })
          }
 
      }
@@ -192,10 +260,10 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
            }
 
        }
-       func paymentAuthorizationViewControllerDidFinish(_ controller: PKPaymentAuthorizationViewController) {
+       public func paymentAuthorizationViewControllerDidFinish(_ controller: PKPaymentAuthorizationViewController) {
            controller.dismiss(animated: true, completion: nil)
        }
-       func paymentAuthorizationViewController(_ controller: PKPaymentAuthorizationViewController, didAuthorizePayment payment: PKPayment, completion: @escaping (PKPaymentAuthorizationStatus) -> Void) {
+       public func paymentAuthorizationViewController(_ controller: PKPaymentAuthorizationViewController, didAuthorizePayment payment: PKPayment, completion: @escaping (PKPaymentAuthorizationStatus) -> Void) {
            if let params = try? OPPApplePayPaymentParams(checkoutID: self.checkoutid, tokenData: payment.token.paymentData) as OPPApplePayPaymentParams? {
                self.transaction  = OPPTransaction(paymentParams: params)
                self.provider.submitTransaction(OPPTransaction(paymentParams: params), completionHandler: {
