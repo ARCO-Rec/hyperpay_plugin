@@ -34,7 +34,10 @@ class FlutterHyperPay {
 
   Future<PaymentResultData> applePay(
       {required ApplePaySettings settings}) async {
-    return await implementApplePay(settings: settings);
+    return await implementApplePay(
+      settings: settings,
+      channelName: channelName,
+    );
   }
 
   /// This async function takes a ReadyUI object as input and returns a Future object of type PaymentResultData.

@@ -1,9 +1,9 @@
 part of 'apple_pay.dart';
 
 Future<PaymentResultData> implementApplePay(
-    {required ApplePaySettings settings}) async {
+    {required ApplePaySettings settings, required String channelName}) async {
   String transactionStatus;
-  var platform = const MethodChannel(PaymentConst.methodCall);
+  final platform = MethodChannel(channelName);
   try {
     final String? result = await platform.invokeMethod(
       PaymentConst.methodCall,
