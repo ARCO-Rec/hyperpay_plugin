@@ -1,13 +1,19 @@
 part of 'apple_pay.dart';
 
-Future<PaymentResultData> implementApplePay(
-    {required ApplePaySettings settings, required String channelName}) async {
+Future<PaymentResultData> implementApplePay({
+  required ApplePaySettings settings,
+  required String channelName,
+  required PaymentMode paymentMode,
+}) async {
   String transactionStatus;
   final platform = MethodChannel(channelName);
   try {
     final String? result = await platform.invokeMethod(
       PaymentConst.methodCall,
-      settings.toJson(),
+      getApplePayModel(
+        settings: settings,
+        paymentMode: paymentMode,
+      ),
     );
     transactionStatus = '$result';
     return PaymentResultManger.getPaymentResult(transactionStatus);
@@ -16,4 +22,13 @@ Future<PaymentResultData> implementApplePay(
     return PaymentResultData(
         errorString: e.message, paymentResult: PaymentResult.error);
   }
+}
+
+Map<String, dynamic> getApplePayModel({
+  required ApplePaySettings settings,
+  required PaymentMode paymentMode,
+}) {
+  final map = settings.toJson();
+  map["mode"] = paymentMode.toString().split('.').last;
+  return map;
 }

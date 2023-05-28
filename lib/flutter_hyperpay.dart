@@ -37,6 +37,7 @@ class FlutterHyperPay {
     return await implementApplePay(
       settings: settings,
       channelName: channelName,
+      paymentMode: paymentMode,
     );
   }
 
