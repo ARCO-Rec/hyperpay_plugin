@@ -52,7 +52,7 @@ Map<String, dynamic> getApplePayModel(
     "brand": brands,
     "lang": lang,
     "merchantId": merchantId,
-    "CountryCode": countryCode,
+    "countryCode": countryCode,
     "currencyCode": currencyCode,
     "companyName": companyName ?? "",
     "themColorHexIOS": themColorHexIOS ?? "",
