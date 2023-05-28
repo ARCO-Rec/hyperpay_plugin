@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:hyperpay_plugin/apple_pay/apple_pay.dart';
 import 'package:hyperpay_plugin/custom_ui/method_channel_custom_ui.dart';
 import 'package:hyperpay_plugin/custom_ui/method_channel_custom_ui_stc.dart';
 
@@ -30,6 +31,11 @@ class FlutterHyperPay {
     required this.paymentMode,
     required this.lang,
   });
+
+  Future<PaymentResultData> applePay(
+      {required ApplePaySettings settings}) async {
+    return await implementApplePay(settings: settings);
+  }
 
   /// This async function takes a ReadyUI object as input and returns a Future object of type PaymentResultData.
   /// It implements a payment operation by passing the Brand name, Checkout ID, Shopper Result URL,
