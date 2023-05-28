@@ -46,7 +46,7 @@ Map<String, dynamic> getApplePayModel(
     String? themColorHexIOS,
     required bool setStorePaymentDetailsMode}) {
   return {
-    "type": PaymentConst.readyUi,
+    "type": PaymentConst.applePay,
     "mode": paymentMode.toString().split('.').last,
     "checkoutid": checkoutId,
     "brand": brands,
