@@ -25,6 +25,7 @@ Future<PaymentResultData> implementPayment(
     final String? result = await platform.invokeMethod(
       PaymentConst.methodCall,
       getReadyModelCards(
+        amount: amount,
         brands: brands,
         checkoutId: checkoutId,
         themColorHexIOS: themColorHexIOS,
@@ -55,6 +56,7 @@ Map<String, dynamic> getReadyModelCards(
     {required List<String> brands,
     required String checkoutId,
     required String shopperResultUrl,
+    required double amount,
     required String lang,
     required PaymentMode paymentMode,
     required String merchantId,
@@ -63,6 +65,7 @@ Map<String, dynamic> getReadyModelCards(
     String? themColorHexIOS,
     required bool setStorePaymentDetailsMode}) {
   return {
+    "amount": amount,
     "type": PaymentConst.readyUi,
     "mode": paymentMode.toString().split('.').last,
     "checkoutid": checkoutId,
