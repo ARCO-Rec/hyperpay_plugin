@@ -13,14 +13,17 @@ class ApplePaySettings {
   final String merchantId;
   final String countryCode;
   final String currencyCode;
+  final double amount;
   final String companyName;
   final String lang;
+
   final String hexColor;
 
   const ApplePaySettings({
     required this.checkoutId,
     required this.merchantId,
     required this.countryCode,
+    required this.amount,
     required this.currencyCode,
     required this.companyName,
     required this.lang,
@@ -36,6 +39,7 @@ class ApplePaySettings {
       "currencyCode": currencyCode,
       "companyName": companyName,
       "lang": lang,
+      "amount": amount,
       "themColorHexIOS": hexColor,
     };
   }

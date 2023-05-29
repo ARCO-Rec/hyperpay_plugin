@@ -13,9 +13,11 @@ class ReadyUI {
   String countryCodeApplePayIOS;
   String companyNameApplePayIOS = "";
   String themColorHexIOS;
+  double amount;
 
   ReadyUI({
     required this.checkoutId,
+    required this.amount,
     required this.brandsName,
     this.merchantIdApplePayIOS = "",
     this.countryCodeApplePayIOS = "",

@@ -9,6 +9,7 @@ import '../flutter_hyperpay.dart';
 Future<PaymentResultData> implementPayment(
     {required List<String> brands,
     required String checkoutId,
+    required double amount,
     required String channelName,
     required String shopperResultUrl,
     required String lang,
