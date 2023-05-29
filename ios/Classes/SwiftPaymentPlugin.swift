@@ -95,34 +95,41 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
         }
 
     private func showApplePay(checkoutId: String,result1:@escaping FlutterResult){
-        let paymentRequest = OPPPaymentProvider.paymentRequest(withMerchantIdentifier: self.applePaybundel, countryCode: self.countryCode)
-        paymentRequest.currencyCode = self.currencyCode
-        paymentRequest.paymentSummaryItems = [PKPaymentSummaryItem(label: self.companyName, amount: NSDecimalNumber(value: self.amount))]
+        DispatchQueue.main.async {
+            let paymentRequest = OPPPaymentProvider.paymentRequest(withMerchantIdentifier: self.merchantId, countryCode: self.countryCode)
+            paymentRequest.currencyCode = self.currencyCode
+            paymentRequest.paymentSummaryItems = [PKPaymentSummaryItem(label: self.companyName, amount: NSDecimalNumber(value: self.amount))]
 
-        if #available(iOS 12.1.1, *) {
-            paymentRequest.supportedNetworks = [ PKPaymentNetwork.mada,PKPaymentNetwork.visa, PKPaymentNetwork.masterCard ]
-        }
-        else {
-            // Fallback on earlier versions
-            paymentRequest.supportedNetworks = [ PKPaymentNetwork.visa, PKPaymentNetwork.masterCard ]
-        }
-        let checkoutSettings = OPPCheckoutSettings()
-        checkoutSettings.applePayPaymentRequest = paymentRequest
-        checkoutSettings.language = self.lang
-        
-        if OPPPaymentProvider.canSubmitPaymentRequest(paymentRequest){
-            if let vc = PKPaymentAuthorizationViewController( paymentRequest:paymentRequest ) as PKPaymentAuthorizationViewController?{
-                vc.delegate = self
-                UIApplication.shared.windows.first?.rootViewController?.present(vc, animated: true,completion:nil)
-                DispatchQueue.main.async {
-                                         result1("SYNC")
-                                     }
-                
-            }else{
-                result1(FlutterError.init(code: "1",message: "Error : Appe Pay not supported",details: nil))
-                
+            if #available(iOS 12.1.1, *) {
+                paymentRequest.supportedNetworks = [ PKPaymentNetwork.mada,PKPaymentNetwork.visa, PKPaymentNetwork.masterCard ]
             }
-        }
+            else {
+                // Fallback on earlier versions
+                paymentRequest.supportedNetworks = [ PKPaymentNetwork.visa, PKPaymentNetwork.masterCard ]
+            }
+            let checkoutSettings = OPPCheckoutSettings()
+            checkoutSettings.applePayPaymentRequest = paymentRequest
+            checkoutSettings.language = self.lang
+            
+           
+        let canSubmit = OPPPaymentProvider.canSubmitPaymentRequest(paymentRequest)
+            if(canSubmit){
+                if let vc = PKPaymentAuthorizationViewController( paymentRequest:paymentRequest ) as PKPaymentAuthorizationViewController?{
+                    vc.delegate = self
+                    UIApplication.shared.windows.first?.rootViewController?.present(vc, animated: true,completion:nil)
+//                    DispatchQueue.main.async {
+//                                             result1("SYNC")
+//                                         }
+                    
+                }else{
+                    result1(FlutterError.init(code: "1",message:"Error : operation cancel",details: nil))
+                    
+                }
+            }
+               
+            
+    }
+        
         
        // checkoutSettings.paymentBrands = ["APPLEPAY"]
     }
@@ -262,6 +269,7 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
        }
        public func paymentAuthorizationViewControllerDidFinish(_ controller: PKPaymentAuthorizationViewController) {
            controller.dismiss(animated: true, completion: nil)
+           self.Presult!("canceled from paymentAuthorizationViewControllerDidFinish")
        }
        public func paymentAuthorizationViewController(_ controller: PKPaymentAuthorizationViewController, didAuthorizePayment payment: PKPayment, completion: @escaping (PKPaymentAuthorizationStatus) -> Void) {
            if let params = try? OPPApplePayPaymentParams(checkoutID: self.checkoutid, tokenData: payment.token.paymentData) as OPPApplePayPaymentParams? {
@@ -270,7 +278,7 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
                    (transaction, error) in
                    if (error != nil) {
                        // see code attribute (OPPErrorCode) and NSLocalizedDescription to identify the reason of failure.
-                       self.createalart(titletext: "APPLEPAY Error", msgtext: "")
+                       self.Presult?(error?.localizedDescription)
                    }
                    else {
                        // send request to your server to obtain transaction status.
