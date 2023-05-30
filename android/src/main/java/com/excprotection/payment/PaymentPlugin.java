@@ -1,11 +1,16 @@
 package com.excprotection.payment;
 
+import com.oppwa.mobile.connect.checkout.meta.CheckoutActivityResultContract;
+import com.oppwa.mobile.connect.checkout.dialog.CheckoutActivity;
+import com.oppwa.mobile.connect.checkout.meta.CheckoutCardBrandsDisplayMode;
 import com.oppwa.mobile.connect.payment.PaymentParams;
 import com.oppwa.mobile.connect.payment.card.CardPaymentParams;
 import com.oppwa.mobile.connect.payment.stcpay.STCPayPaymentParams;
 import com.oppwa.mobile.connect.payment.stcpay.STCPayVerificationOption;
 import com.oppwa.mobile.connect.provider.OppPaymentProvider;
+
 import androidx.annotation.NonNull;
+
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
@@ -15,6 +20,7 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -35,13 +41,15 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.widget.Toast;
+
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-public class PaymentPlugin  implements
+public class PaymentPlugin implements
         PluginRegistry.ActivityResultListener ,ActivityAware,  ITransactionListener
-        , FlutterPlugin, MethodCallHandler , PluginRegistry.NewIntentListener {
+        , FlutterPlugin, MethodCallHandler  ,PluginRegistry.NewIntentListener {
 
   private  MethodChannel.Result Result;
   private  String mode = "";
@@ -132,6 +140,7 @@ public class PaymentPlugin  implements
       //LIVE MODE
       checkoutSettings = new CheckoutSettings(checkoutId, paymentBrands,
               Connect.ProviderMode.LIVE);
+
     } else {
       // TEST MODE
       checkoutSettings = new CheckoutSettings(checkoutId, paymentBrands,
@@ -153,17 +162,12 @@ public class PaymentPlugin  implements
     }
     //CHANGE THEME
     checkoutSettings.setThemeResId(R.style.NewCheckoutTheme);
+    checkoutSettings.setCardBrandsDisplayMode(CheckoutCardBrandsDisplayMode.SEPARATE);
 
-    // CHECKOUT BROADCAST RECEIVER
-    ComponentName componentName = new ComponentName(
-            context.getPackageName(), CheckoutBroadcastReceiver.class.getName());
-
-    // SET UP THE INTENT AND START THE CHECKOUT ACTIVITY
-    Intent intent = checkoutSettings.createCheckoutActivityIntent(context.getApplicationContext(), componentName);
+     Intent intent = new CheckoutActivityResultContract().createIntent(context, checkoutSettings);
 
     // START ACTIVITY
     activity.startActivityForResult(intent, CheckoutActivity.REQUEST_CODE_CHECKOUT);
-
   }
 
   private void storedCardPayment(String checkoutId) {
