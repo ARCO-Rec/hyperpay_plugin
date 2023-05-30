@@ -52,6 +52,7 @@ class FlutterHyperPay {
       checkoutId: readyUI.checkoutId,
       shopperResultUrl: shopperResultUrl,
       channelName: channelName,
+      amount: readyUI.amount,
       paymentMode: paymentMode,
       merchantId: readyUI.merchantIdApplePayIOS,
       countryCode: readyUI.countryCodeApplePayIOS,

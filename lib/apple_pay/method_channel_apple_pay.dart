@@ -11,6 +11,7 @@ Future<PaymentResultData> implementApplePay({
     final String? result = await platform.invokeMethod(
       PaymentConst.methodCall,
       getApplePayModel(
+        amount: settings.amount,
         brands: [PaymentBrands.applePay],
         checkoutId: settings.checkoutId,
         countryCode: settings.countryCode,
@@ -38,6 +39,7 @@ Map<String, dynamic> getApplePayModel(
     required String checkoutId,
     required String shopperResultUrl,
     required String lang,
+    required double amount,
     required PaymentMode paymentMode,
     required String merchantId,
     required String countryCode,
@@ -46,6 +48,7 @@ Map<String, dynamic> getApplePayModel(
     String? themColorHexIOS,
     required bool setStorePaymentDetailsMode}) {
   return {
+    "amount": amount,
     "type": PaymentConst.applePay,
     "mode": paymentMode.toString().split('.').last,
     "checkoutid": checkoutId,
