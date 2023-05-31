@@ -143,6 +143,7 @@ class _MyHomePageState extends State<MyHomePage> {
     PaymentResultData paymentResultData;
     paymentResultData = await flutterHyperPay.readyUICards(
       readyUI: ReadyUI(
+          amount: 500,
           brandsName: brandsName,
           checkoutId: checkoutId,
           merchantIdApplePayIOS: InAppPaymentSetting.merchantId,
