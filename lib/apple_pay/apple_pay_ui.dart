@@ -70,15 +70,18 @@ class ApplePayButton extends StatelessWidget {
   /// transaction.
   final ApplePayButtonType type;
 
+  final double height;
+
   /// Creates an Apple Pay button widget with the parameters specified.
   ApplePayButton({
     Key? key,
     this.onPressed,
+    required this.height,
     this.style = ApplePayButtonStyle.black,
     this.type = ApplePayButtonType.plain,
   })  : constraints = BoxConstraints.tightFor(
           width: type.minimumWidth,
-          height: minimumButtonHeight,
+          height: height,
         ),
         super(key: key) {
     assert(constraints.debugAssertIsValid());
