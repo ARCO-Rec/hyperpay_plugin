@@ -4,16 +4,39 @@ part of '../flutter_hyperpay.dart';
 /// object based on the paymentResult passed. It will return the respective paymentResult
 /// with the errorString depending on the paymentResult passed.
 class PaymentResultManger {
-  static PaymentResultData getPaymentResult(String paymentResult) {
-    if (paymentResult == PaymentConst.success) {
-      return PaymentResultData(
-          errorString: '', paymentResult: PaymentResult.success);
-    } else if (paymentResult == PaymentConst.sync) {
-      return PaymentResultData(
-          errorString: '', paymentResult: PaymentResult.sync);
-    } else {
-      return PaymentResultData(
-          errorString: '', paymentResult: PaymentResult.noResult);
-    }
+  // static PaymentResultData getPaymentResult(String paymentResult) {
+  //   if (paymentResult == PaymentConst.success) {
+  //     return PaymentResultData(
+  //         errorString: '', paymentResult: PaymentResult.success);
+  //   } else if (paymentResult == PaymentConst.sync) {
+  //     return PaymentResultData(
+  //         errorString: '', paymentResult: PaymentResult.sync);
+  //   } else {
+  //     return PaymentResultData(
+  //         errorString: '', paymentResult: PaymentResult.noResult);
+  //   }
+  // }
+  // static PaymentResultData getPaymentResult(String paymentResult) {
+  //   if (paymentResult == PaymentConst.success) {
+  //     return PaymentResultData(
+  //         errorString: '', paymentResult: PaymentResult.success);
+  //   } else if (paymentResult == PaymentConst.sync) {
+  //     return PaymentResultData(
+  //         errorString: '', paymentResult: PaymentResult.sync);
+  //   } else {
+  //     return PaymentResultData(
+  //         errorString: '', paymentResult: PaymentResult.noResult);
+  //   }
+  // }
+  static PaymentResultData getPaymentResult(String errorMessageFromPlatform) {
+    return PaymentResultData(
+      errorString: errorMessageFromPlatform,
+      paymentFeedback: PaymentFeedback.values.firstWhere(
+        (f) => errorMessageFromPlatform.toUpperCase().contains(
+              f.name.toUpperCase(),
+            ),
+        orElse: () => PaymentFeedback.none,
+      ),
+    );
   }
 }

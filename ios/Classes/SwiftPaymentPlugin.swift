@@ -175,17 +175,25 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
                  // You can start or stop loading animation based on inProgress parameter.
              }, completionHandler: { (transaction, error) in
                  if error != nil {
+                     
                      // See code attribute (OPPErrorCode) and NSLocalizedDescription to identify the reason of failure.
+                     result1(FlutterError.init(code: "1",message: "ProcessingPaymentError",details: error?.localizedDescription))
+                     
                  } else {
                      if transaction?.redirectURL != nil {
                          // Shopper was redirected to the issuer web page.
                          // Request payment status when shopper returns to the app using transaction.resourcePath or just checkout id.
+                         NotificationCenter.default.addObserver(self, selector: #selector(self.didReceiveAsynchronousPaymentCallback), name: Notification.Name(rawValue: "AsyncPaymentCompletedNotificationKey"), object: nil)
                      } else {
                          // Request payment status for the synchronous transaction from your server using transactionPath.resourcePath or just checkout id.
+                         DispatchQueue.main.async {
+                                                 result1("Sync")
+                                             }
                      }
                  }
              }, cancelHandler: {
                  // Executed if the shopper closes the payment page prematurely.
+                 result1(FlutterError.init(code: "1",message:"OperationCancelledError",details: nil))
              })
 //             self.checkoutProvider?.presentCheckout(forSubmittingTransactionCompletionHandler: {
 //                 (transaction, error) in

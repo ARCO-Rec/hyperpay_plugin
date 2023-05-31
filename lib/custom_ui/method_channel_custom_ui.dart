@@ -45,8 +45,7 @@ Future<PaymentResultData> implementPaymentCustomUI({
     return PaymentResultManger.getPaymentResult(transactionStatus);
   } on PlatformException catch (e) {
     transactionStatus = "${e.message}";
-    return PaymentResultData(
-        errorString: e.message, paymentResult: PaymentResult.error);
+    return PaymentResultManger.getPaymentResult(transactionStatus);
   }
 }
 

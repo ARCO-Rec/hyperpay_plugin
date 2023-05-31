@@ -30,11 +30,11 @@ class PaymentBrands {
 /// containing an errorString (nullable) and a paymentResult object.
 class PaymentResultData {
   String? errorString;
-  PaymentResult paymentResult;
+  PaymentFeedback paymentFeedback;
 
   PaymentResultData({
     required this.errorString,
-    required this.paymentResult,
+    required this.paymentFeedback,
   });
 }
 
@@ -46,4 +46,12 @@ class PaymentLang {
   static const String iosENLang = "en";
   static const String androidENLang = "en_US";
   static const String androidARLang = "ar_AR";
+}
+
+enum PaymentFeedback {
+  operationCancelledError,
+  processingPaymentError,
+  sync,
+  async,
+  none,
 }
