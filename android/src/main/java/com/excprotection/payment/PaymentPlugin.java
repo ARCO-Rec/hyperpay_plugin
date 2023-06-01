@@ -315,18 +315,22 @@ public class PaymentPlugin implements
         // String resourcePath = data.getStringExtra(CheckoutActivity.CHECKOUT_RESULT_RESOURCE_PATH);
         if (transaction.getTransactionType() == TransactionType.SYNC) {
           /* check the result of synchronous transaction */
-          success("SYNC");
+          success("Sync");
+        }
+
+        if(transaction.getTransactionType() == TransactionType.ASYNC){
+          success("Async");
         }
 
       break ;
       case CheckoutActivity.RESULT_CANCELED :
               /* shopper canceled the checkout process */
-              error("2", "Canceled", "");
+              error("2", "OperationCancelledError", "");
         break ;
 
       case CheckoutActivity.RESULT_ERROR :
               /* shopper error the checkout process */
-              error("3", "Checkout Result Error", "");
+              error("3", "ProcessingPaymentError", "");
         break ;
 
     }
@@ -354,7 +358,7 @@ public class PaymentPlugin implements
   public boolean onNewIntent(@NonNull Intent intent) {
     // TO BACK TO VIEW
     if (intent.getScheme() != null && intent.getScheme().equals(ShopperResultUrl)) {
-      success("success");
+      // success("success");
     }
     return  true ;
   }

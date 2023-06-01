@@ -155,8 +155,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
     );
 
-    if (paymentResultData.paymentResult == PaymentResult.success ||
-        paymentResultData.paymentResult == PaymentResult.sync) {
+    if (paymentResultData.paymentFeedback == PaymentFeedback.sync) {
       // do something
     }
   }
@@ -180,8 +179,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
 
-    if (paymentResultData.paymentResult == PaymentResult.success ||
-        paymentResultData.paymentResult == PaymentResult.sync) {
+    if (paymentResultData.paymentFeedback == PaymentFeedback.sync) {
       // do something
     }
   }
@@ -195,8 +193,7 @@ class _MyHomePageState extends State<MyHomePage> {
           CustomUISTC(checkoutId: checkoutId, phoneNumber: phoneNumber),
     );
 
-    if (paymentResultData.paymentResult == PaymentResult.success ||
-        paymentResultData.paymentResult == PaymentResult.sync) {
+    if (paymentResultData.paymentFeedback == PaymentFeedback.sync) {
       // do something
     }
   }
