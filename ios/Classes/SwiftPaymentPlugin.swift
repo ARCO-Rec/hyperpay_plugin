@@ -81,9 +81,8 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
                     self.countryCode=(args!["countryCode"] as? String)!
                     self.companyName=(args!["companyName"] as? String)!
                     self.currencyCode=(args!["currencyCode"] as? String)!
-                    DispatchQueue.main.async {
+                   
                     self.showApplePay(checkoutId: self.checkoutid,result1:result)
-                }
                 default:
                     result(FlutterError(code: "1", message: "Method name is not found", details: ""))
             }
@@ -96,7 +95,6 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
         }
 
     private func showApplePay(checkoutId: String,result1:@escaping FlutterResult){
-        DispatchQueue.main.async {
             let paymentRequest = OPPPaymentProvider.paymentRequest(withMerchantIdentifier: self.merchantId, countryCode: self.countryCode)
             paymentRequest.currencyCode = self.currencyCode
             paymentRequest.paymentSummaryItems = [PKPaymentSummaryItem(label: self.companyName, amount: NSDecimalNumber(value: self.amount))]
@@ -129,7 +127,6 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
             }
                
             
-    }
         
         
        // checkoutSettings.paymentBrands = ["APPLEPAY"]
