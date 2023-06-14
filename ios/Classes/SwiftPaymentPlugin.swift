@@ -289,7 +289,8 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
                self.provider.submitTransaction(OPPTransaction(paymentParams: params), completionHandler: { (transaction, error) in
                    if (error != nil) {
                        completion(.failure)
-                       self.Presult?(error?.localizedDescription)
+                       var err = error!.localizedDescription + "<--->" + error.debugDescription
+                       self.Presult?(err)
                    } else {
                        completion(.success)
                        self.Presult?("success")
