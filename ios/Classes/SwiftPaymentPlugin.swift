@@ -277,54 +277,74 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
            controller.dismiss(animated: true, completion: nil)
            self.Presult!("canceled from paymentAuthorizationViewControllerDidFinish")
        }
-       public func paymentAuthorizationViewController(_ controller: PKPaymentAuthorizationViewController, didAuthorizePayment payment: PKPayment, completion: @escaping (PKPaymentAuthorizationStatus) -> Void) {
-           do{
-               let params = try OPPApplePayPaymentParams(checkoutID: self.checkoutid, tokenData: payment.token.paymentData) as OPPApplePayPaymentParams?
-               
-               if (params != nil) {
-                   params!.shopperResultURL = Bundle.main.bundleIdentifier! + ".payments://result"
-                   
-                   self.transaction  = OPPTransaction(paymentParams: params!)
-                   self.provider.submitTransaction(OPPTransaction(paymentParams: params!), completionHandler: {
-                       (transaction, error) in
-                       if (error != nil) {
-                           var err = error!.localizedDescription + "<--->" + error.debugDescription
-                           // see code attribute (OPPErrorCode) and NSLocalizedDescription to identify the reason of failure.
-                           self.Presult?(err)
-                     
-                       }
-                       else {
-                           // send request to your server to obtain transaction status.
-                           completion(.success)
-                           self.Presult!("success")
-                       }
-                   })
-               }
-               
-               
-                    } catch{
-                        NSLog(error.localizedDescription)
-                        self.Presult!("Error: " + error.localizedDescription)
-                    }
-           
+    
+    public func paymentAuthorizationViewController(_ controller: PKPaymentAuthorizationViewController, didAuthorizePayment payment: PKPayment, completion: @escaping (PKPaymentAuthorizationStatus) -> Void) {
            
            if let params = try? OPPApplePayPaymentParams(checkoutID: self.checkoutid, tokenData: payment.token.paymentData) as OPPApplePayPaymentParams? {
-               self.transaction  = OPPTransaction(paymentParams: params)
-               self.provider.submitTransaction(OPPTransaction(paymentParams: params), completionHandler: {
-                   (transaction, error) in
+               
+               // Add the shopperResultURL to the params, without it the payment
+               // can not proceed.
+               params.shopperResultURL = Bundle.main.bundleIdentifier! + ".payments://result"
+               
+               self.provider.submitTransaction(OPPTransaction(paymentParams: params), completionHandler: { (transaction, error) in
                    if (error != nil) {
-                       // see code attribute (OPPErrorCode) and NSLocalizedDescription to identify the reason of failure.
+                       completion(.failure)
                        self.Presult?(error?.localizedDescription)
-                   }
-                   else {
-                       // send request to your server to obtain transaction status.
+                   } else {
                        completion(.success)
-                       self.Presult!("success")
+                       self.Presult?("success")
                    }
                })
            }
-
        }
+//       public func paymentAuthorizationViewController(_ controller: PKPaymentAuthorizationViewController, didAuthorizePayment payment: PKPayment, completion: @escaping (PKPaymentAuthorizationStatus) -> Void) {
+//           do{
+//               let params = try OPPApplePayPaymentParams(checkoutID: self.checkoutid, tokenData: payment.token.paymentData) as OPPApplePayPaymentParams?
+//
+//               if (params != nil) {
+//                   params!.shopperResultURL = Bundle.main.bundleIdentifier! + ".payments://result"
+//
+//                   self.transaction  = OPPTransaction(paymentParams: params!)
+//                   self.provider.submitTransaction(OPPTransaction(paymentParams: params!), completionHandler: {
+//                       (transaction, error) in
+//                       if (error != nil) {
+//                           var err = error!.localizedDescription + "<--->" + error.debugDescription
+//                           // see code attribute (OPPErrorCode) and NSLocalizedDescription to identify the reason of failure.
+//                           self.Presult?(err)
+//
+//                       }
+//                       else {
+//                           // send request to your server to obtain transaction status.
+//                           completion(.success)
+//                           self.Presult!("success")
+//                       }
+//                   })
+//               }
+//
+//
+//                    } catch{
+//                        NSLog(error.localizedDescription)
+//                        self.Presult!("Error: " + error.localizedDescription)
+//                    }
+//
+//
+//           if let params = try? OPPApplePayPaymentParams(checkoutID: self.checkoutid, tokenData: payment.token.paymentData) as OPPApplePayPaymentParams? {
+//               self.transaction  = OPPTransaction(paymentParams: params)
+//               self.provider.submitTransaction(OPPTransaction(paymentParams: params), completionHandler: {
+//                   (transaction, error) in
+//                   if (error != nil) {
+//                       // see code attribute (OPPErrorCode) and NSLocalizedDescription to identify the reason of failure.
+//                       self.Presult?(error?.localizedDescription)
+//                   }
+//                   else {
+//                       // send request to your server to obtain transaction status.
+//                       completion(.success)
+//                       self.Presult!("success")
+//                   }
+//               })
+//           }
+//
+//       }
        func decimal(with string: String) -> NSDecimalNumber {
            //  let formatter = NumberFormatter()
            let formatter = NumberFormatter()
