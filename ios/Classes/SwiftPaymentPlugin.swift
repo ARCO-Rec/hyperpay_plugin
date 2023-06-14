@@ -278,6 +278,34 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
            self.Presult!("canceled from paymentAuthorizationViewControllerDidFinish")
        }
        public func paymentAuthorizationViewController(_ controller: PKPaymentAuthorizationViewController, didAuthorizePayment payment: PKPayment, completion: @escaping (PKPaymentAuthorizationStatus) -> Void) {
+           do{
+               let params = try OPPApplePayPaymentParams(checkoutID: self.checkoutid, tokenData: payment.token.paymentData) as OPPApplePayPaymentParams?
+               
+               if (params != nil) {
+                   params!.shopperResultURL = Bundle.main.bundleIdentifier! + ".payments://result"
+                   
+                   self.transaction  = OPPTransaction(paymentParams: params!)
+                   self.provider.submitTransaction(OPPTransaction(paymentParams: params!), completionHandler: {
+                       (transaction, error) in
+                       if (error != nil) {
+                           // see code attribute (OPPErrorCode) and NSLocalizedDescription to identify the reason of failure.
+                           self.Presult?(error?.localizedDescription)
+                       }
+                       else {
+                           // send request to your server to obtain transaction status.
+                           completion(.success)
+                           self.Presult!("success")
+                       }
+                   })
+               }
+               
+               
+                    } catch{
+                        NSLog(error.localizedDescription)
+                        self.Presult!("Error: " + error.localizedDescription)
+                    }
+           
+           
            if let params = try? OPPApplePayPaymentParams(checkoutID: self.checkoutid, tokenData: payment.token.paymentData) as OPPApplePayPaymentParams? {
                self.transaction  = OPPTransaction(paymentParams: params)
                self.provider.submitTransaction(OPPTransaction(paymentParams: params), completionHandler: {
