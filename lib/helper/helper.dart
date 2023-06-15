@@ -35,7 +35,7 @@ class PaymentResultManger {
         (f) => errorMessageFromPlatform.toUpperCase().contains(
               f.name.toUpperCase(),
             ),
-        orElse: () => PaymentFeedback.none,
+        orElse: () => PaymentFeedback.error,
       ),
     );
   }

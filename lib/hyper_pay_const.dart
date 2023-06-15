@@ -49,9 +49,11 @@ class PaymentLang {
 }
 
 enum PaymentFeedback {
-  operationCancelledError,
-  processingPaymentError,
-  sync,
-  async,
-  none,
+  operationCancelledError, // deprecated
+  processingPaymentError, // deprecated
+  sync, // deprecated
+  async, // deprecated
+  none, // deprecated
+  error,
+  success
 }
