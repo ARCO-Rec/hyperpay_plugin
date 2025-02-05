@@ -25,6 +25,10 @@ rootProject.allprojects {
 apply plugin: 'com.android.library'
 
 android {
+    if (project.android.hasProperty("namespace")) {
+        namespace("sa.arco.hyperpay_plugin")
+    }
+
     compileSdkVersion 32
 
     compileOptions {
