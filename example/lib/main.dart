@@ -66,7 +66,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     payRequestNowReadyUI(brandsName: [
                       "VISA",
                       "MASTER",
-                      // "MADA",
+                      "MADA",
                       // "PAYPAL",
                       // "STC_PAY",
                       // "APPLEPAY"

@@ -153,9 +153,6 @@ public class PaymentPlugin implements
     // SHOW TOTAL PAYMENT AMOUNT IN BUTTON
     // checkoutSettings.setTotalAmountRequired(true);
 
-    //SET SHOPPER
-    checkoutSettings.setShopperResultUrl(ShopperResultUrl + "://result");
-
     //SAVE PAYMENT CARDS FOR NEXT
     if (setStorePaymentDetailsMode.equals("true")) {
       checkoutSettings.setStorePaymentDetailsMode(CheckoutStorePaymentDetailsMode.PROMPT);
@@ -167,7 +164,7 @@ public class PaymentPlugin implements
      Intent intent = new CheckoutActivityResultContract().createIntent(context, checkoutSettings);
 
     // START ACTIVITY
-    activity.startActivityForResult(intent, CheckoutActivity.REQUEST_CODE_CHECKOUT);
+    activity.startActivityForResult(intent, 242);
   }
 
   private void storedCardPayment(String checkoutId) {
