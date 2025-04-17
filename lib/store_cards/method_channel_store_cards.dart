@@ -1,5 +1,4 @@
-import 'package:flutter/services.dart';
-import '../flutter_hyperpay.dart';
+part of '../flutter_hyperpay.dart';
 
 /// This function is used to implement payment using stored cards.
 /// The [brand] should be provided for the payment.

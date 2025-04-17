@@ -1,23 +1,22 @@
 import 'dart:async';
-import 'package:hyperpay_plugin/apple_pay/apple_pay.dart';
-import 'package:hyperpay_plugin/custom_ui/method_channel_custom_ui.dart';
-import 'package:hyperpay_plugin/custom_ui/method_channel_custom_ui_stc.dart';
 
-import 'store_cards/method_channel_store_cards.dart';
-import 'ready_ui/method_channel_ready_ui.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+part 'apple_pay/apple_pay.dart';
+part 'apple_pay/apple_pay_ui.dart';
+part 'apple_pay/method_channel_apple_pay.dart';
 part 'hyper_pay_const.dart';
-
 part 'helper/helper.dart';
-
+part 'ready_ui/method_channel_ready_ui.dart';
 part 'ready_ui/ready_ui.dart';
-
 part 'custom_ui/custom_ui.dart';
-
 part 'custom_ui/custom_ui_stc.dart';
-
+part 'custom_ui/method_channel_custom_ui.dart';
+part 'custom_ui/method_channel_custom_ui_stc.dart';
 part 'store_cards/stored_cards.dart';
-
+part 'store_cards/method_channel_store_cards.dart';
 part 'enum.dart';
 
 class FlutterHyperPay {
@@ -52,7 +51,6 @@ class FlutterHyperPay {
       checkoutId: readyUI.checkoutId,
       shopperResultUrl: shopperResultUrl,
       channelName: channelName,
-      amount: readyUI.amount,
       paymentMode: paymentMode,
       merchantId: readyUI.merchantIdApplePayIOS,
       countryCode: readyUI.countryCodeApplePayIOS,

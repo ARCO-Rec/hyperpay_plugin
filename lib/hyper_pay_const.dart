@@ -30,11 +30,11 @@ class PaymentBrands {
 /// containing an errorString (nullable) and a paymentResult object.
 class PaymentResultData {
   String? errorString;
-  PaymentFeedback paymentFeedback;
+  PaymentResult paymentResult;
 
   PaymentResultData({
-    required this.errorString,
-    required this.paymentFeedback,
+    this.errorString,
+    required this.paymentResult,
   });
 }
 
@@ -46,14 +46,4 @@ class PaymentLang {
   static const String iosENLang = "en";
   static const String androidENLang = "en_US";
   static const String androidARLang = "ar_AR";
-}
-
-enum PaymentFeedback {
-  operationCancelledError, // deprecated
-  processingPaymentError, // deprecated
-  sync, // deprecated
-  async, // deprecated
-  none, // deprecated
-  error,
-  success
 }

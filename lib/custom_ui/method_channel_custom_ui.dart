@@ -1,5 +1,4 @@
-import 'package:flutter/services.dart';
-import '../flutter_hyperpay.dart';
+part of '../flutter_hyperpay.dart';
 
 /// This is an asynchronous function that implements a custom UI payment.
 /// It takes parameters such as paymentMode, brand, checkoutId, channelName,
@@ -17,9 +16,9 @@ Future<PaymentResultData> implementPaymentCustomUI({
   required String lang,
   required String cardNumber,
   required String holderName,
-  required int month,
-  required int year,
-  required int cvv,
+  required String month,
+  required String year,
+  required String cvv,
   required bool enabledTokenization,
 }) async {
   String transactionStatus;
@@ -62,9 +61,9 @@ Map<String, String?> getCustomUiModelCards({
   required String lang,
   required String cardNumber,
   required String holderName,
-  required int month,
-  required int year,
-  required int cvv,
+  required String month,
+  required String year,
+  required String cvv,
   required bool enabledTokenization,
 }) {
   return {

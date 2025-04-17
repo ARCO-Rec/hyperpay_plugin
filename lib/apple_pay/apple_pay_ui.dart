@@ -1,4 +1,4 @@
-part of 'apple_pay.dart';
+part of '../flutter_hyperpay.dart';
 
 enum ApplePayButtonStyle {
   white,

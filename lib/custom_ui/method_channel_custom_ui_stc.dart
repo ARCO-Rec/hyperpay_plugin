@@ -1,5 +1,4 @@
-import 'package:flutter/services.dart';
-import '../flutter_hyperpay.dart';
+part of '../flutter_hyperpay.dart';
 
 /// implementPaymentCustomUISTC is a method used to make online payments.
 /// It requires the paymentMode, checkoutId, channelName, shopperResultUrl,

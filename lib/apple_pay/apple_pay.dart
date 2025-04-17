@@ -1,11 +1,4 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
-
-import '../flutter_hyperpay.dart';
-
-part 'apple_pay_ui.dart';
-part 'method_channel_apple_pay.dart';
+part of  '../flutter_hyperpay.dart';
 
 class ApplePaySettings {
   final String paymentType;
@@ -16,7 +9,6 @@ class ApplePaySettings {
   final double amount;
   final String companyName;
   final String lang;
-
   final String hexColor;
 
   const ApplePaySettings({

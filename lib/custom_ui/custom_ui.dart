@@ -9,9 +9,9 @@ class CustomUI {
   String brandName;
   String cardNumber;
   String holderName;
-  int month;
-  int year;
-  int cvv;
+  String month;
+  String year;
+  String cvv;
   bool enabledTokenization;
 
   CustomUI({

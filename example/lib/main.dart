@@ -143,7 +143,6 @@ class _MyHomePageState extends State<MyHomePage> {
     PaymentResultData paymentResultData;
     paymentResultData = await flutterHyperPay.readyUICards(
       readyUI: ReadyUI(
-          amount: 500,
           brandsName: brandsName,
           checkoutId: checkoutId,
           merchantIdApplePayIOS: InAppPaymentSetting.merchantId,
@@ -155,7 +154,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
     );
 
-    if (paymentResultData.paymentFeedback == PaymentFeedback.sync) {
+    if (paymentResultData.paymentResult == PaymentResult.sync) {
       // do something
     }
   }
@@ -172,14 +171,14 @@ class _MyHomePageState extends State<MyHomePage> {
         checkoutId: checkoutId,
         cardNumber: cardNumber,
         holderName: "test name",
-        month: 12,
-        year: 2023,
-        cvv: 123,
+        month: '12',
+        year: '2023',
+        cvv: '123',
         enabledTokenization: false, // default
       ),
     );
 
-    if (paymentResultData.paymentFeedback == PaymentFeedback.sync) {
+    if (paymentResultData.paymentResult == PaymentResult.sync) {
       // do something
     }
   }
@@ -193,7 +192,7 @@ class _MyHomePageState extends State<MyHomePage> {
           CustomUISTC(checkoutId: checkoutId, phoneNumber: phoneNumber),
     );
 
-    if (paymentResultData.paymentFeedback == PaymentFeedback.sync) {
+    if (paymentResultData.paymentResult == PaymentResult.sync) {
       // do something
     }
   }
