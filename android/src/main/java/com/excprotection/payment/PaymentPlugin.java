@@ -1,6 +1,5 @@
 package com.excprotection.payment;
 
-import com.oppwa.mobile.connect.checkout.meta.CheckoutActivityResultContract;
 import com.oppwa.mobile.connect.checkout.dialog.CheckoutActivity;
 import com.oppwa.mobile.connect.checkout.meta.CheckoutCardBrandsDisplayMode;
 import com.oppwa.mobile.connect.payment.PaymentParams;
@@ -10,6 +9,9 @@ import com.oppwa.mobile.connect.payment.stcpay.STCPayVerificationOption;
 import com.oppwa.mobile.connect.provider.OppPaymentProvider;
 
 import androidx.annotation.NonNull;
+import androidx.browser.customtabs.CustomTabColorSchemeParams;
+import androidx.browser.customtabs.CustomTabsIntent;
+import androidx.core.content.ContextCompat;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
@@ -21,12 +23,10 @@ import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry;
 
 import android.app.Activity;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 
-import com.oppwa.mobile.connect.checkout.dialog.CheckoutActivity;
 import com.oppwa.mobile.connect.checkout.meta.CheckoutSettings;
 import com.oppwa.mobile.connect.checkout.meta.CheckoutStorePaymentDetailsMode;
 import com.oppwa.mobile.connect.exception.PaymentError;
@@ -45,7 +45,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.widget.Toast;
 
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -82,7 +81,6 @@ public class PaymentPlugin implements
         channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), CHANNEL);
         channel.setMethodCallHandler(this);
         context = flutterPluginBinding.getApplicationContext();
-
     }
 
     @Override
@@ -363,8 +361,9 @@ public class PaymentPlugin implements
         // TO BACK TO VIEW
         if (intent.getScheme() != null && intent.getScheme().equals(ShopperResultUrl)) {
             success("Success");
+            return true;
         }
-        return true;
+        return false;
     }
 
     @Override
@@ -375,9 +374,25 @@ public class PaymentPlugin implements
         } else {
             /* wait for the callback in the s */
             Uri uri = Uri.parse(transaction.getRedirectUrl());
-            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-            activity.startActivity(intent);
+
+            launchCustomTabs(uri);
         }
+    }
+
+    private void launchCustomTabs(Uri uri) {
+        CustomTabColorSchemeParams colorParams = new CustomTabColorSchemeParams.Builder()
+                .setToolbarColor(ContextCompat.getColor(context, R.color.headerBackground))
+                .build();
+
+        CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder()
+                .setShowTitle(true)
+                .setDefaultColorSchemeParams(colorParams)
+                .setShareState(CustomTabsIntent.SHARE_STATE_OFF)
+                .build();
+
+        customTabsIntent.intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+        customTabsIntent.launchUrl(activity, uri);
+
     }
 
     @Override
@@ -426,7 +441,6 @@ public class PaymentPlugin implements
         activity = binding.getActivity();
         binding.addActivityResultListener(this);
         binding.addOnNewIntentListener(this); // TO LISTEN ON NEW INTENT OPEN
-
     }
 
     @Override
