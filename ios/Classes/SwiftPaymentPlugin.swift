@@ -58,7 +58,7 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
             self.checkoutid = (args!["checkoutid"] as? String)!
             self.shopperResultURL = (args!["ShopperResultUrl"] as? String)!
             self.lang=(args!["lang"] as? String)!
-            self.amount = (args!["amount"] as? Double)!
+            self.amount = (args?["amount"] as? Double) ?? 1
             if self.mode == "live" {
                 self.provider = OPPPaymentProvider(mode: OPPProviderMode.live)
             }else{
