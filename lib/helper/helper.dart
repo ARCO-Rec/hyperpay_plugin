@@ -11,6 +11,9 @@ class PaymentResultManger {
     } else if (paymentResult == PaymentConst.sync) {
       return PaymentResultData(
           errorString: '', paymentResult: PaymentResult.sync);
+    } else if (paymentResult == PaymentConst.cancelled) {
+      return PaymentResultData(
+          errorString: '', paymentResult: PaymentResult.cancelled);
     } else {
       return PaymentResultData(
           errorString: '', paymentResult: PaymentResult.noResult);

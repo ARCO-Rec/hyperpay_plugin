@@ -12,7 +12,8 @@ class PaymentConst {
   static const String methodCall = "gethyperpayresponse";
   static const String success = "success";
   static const String error = "error";
-  static const String sync = "SYNC";
+  static const String sync = "Sync";
+  static const String cancelled = "Cancelled";
 }
 
 /// This class contains constants representing various payment brands,
