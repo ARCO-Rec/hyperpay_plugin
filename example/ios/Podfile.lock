@@ -1,14 +1,14 @@
 PODS:
   - Flutter (1.0.0)
-  - hyperpay_plugin (0.0.1):
+  - hyperpay_plugin (0.0.3):
     - Flutter
-    - hyperpay_sdk (~> 4.9.0)
-  - hyperpay_sdk (4.9.0)
+    - hyperpay_sdk (~> 5.1.0)
+  - hyperpay_sdk (5.1.0)
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
   - hyperpay_plugin (from `.symlinks/plugins/hyperpay_plugin/ios`)
-  - hyperpay_sdk (from `https://github.com/ahmedelkhyary/hyperpay_sdk.git`)
+  - hyperpay_sdk (from `https://github.com/ARCO-Rec/oppwamobile-ios-sdk.git`)
 
 EXTERNAL SOURCES:
   Flutter:
@@ -16,18 +16,18 @@ EXTERNAL SOURCES:
   hyperpay_plugin:
     :path: ".symlinks/plugins/hyperpay_plugin/ios"
   hyperpay_sdk:
-    :git: https://github.com/ahmedelkhyary/hyperpay_sdk.git
+    :git: https://github.com/ARCO-Rec/oppwamobile-ios-sdk.git
 
 CHECKOUT OPTIONS:
   hyperpay_sdk:
-    :commit: b22e26e393282b8213a14c9208f7fd760b5a9c6f
-    :git: https://github.com/ahmedelkhyary/hyperpay_sdk.git
+    :commit: 83de8ac118109f2c27fc3a28d3e2d9596b99388d
+    :git: https://github.com/ARCO-Rec/oppwamobile-ios-sdk.git
 
 SPEC CHECKSUMS:
-  Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
-  hyperpay_plugin: 432ea2c9897003861b352c7f6bcc768438364276
-  hyperpay_sdk: 29302f5e0822fa31472bd3e987e5f53db8a2afdf
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  hyperpay_plugin: 26d5632113a28ebbeaa7c3a95dc5ab78f829afe3
+  hyperpay_sdk: 46044e04ba7cad39906fbd7b2e41e97fb0c947e3
 
-PODFILE CHECKSUM: 19e3624099e50198136fe2a76b0e2b8be62c026a
+PODFILE CHECKSUM: b82e9a55c179c573a4c1ec519e1c6bdc26bf826b
 
-COCOAPODS: 1.11.3
+COCOAPODS: 1.16.2

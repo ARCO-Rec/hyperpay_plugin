@@ -235,7 +235,7 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
                     (transaction, error) in
                     guard let transaction = self.transaction else {
                         // Handle invalid transaction, check error
-                        self.createalart(titletext: error as! String, msgtext: error as! String)
+                        self.createalart(titletext: self.lang == "en" ? "Payment failed" : "فشلت عملية الدفع", msgtext: self.lang == "en" ? "Please try again later" : "برجاء المحاولة لاحقًا")
                         return
                     }
                     if transaction.type == .asynchronous {
@@ -250,13 +250,13 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
                     }
                     else {
                         // Handle the error
-                        self.createalart(titletext: error as! String, msgtext: "Plesae try again")
+                        self.createalart(titletext: self.lang == "en" ? "Payment failed" : "فشلت عملية الدفع", msgtext: self.lang == "en" ? "Please try again later" : "برجاء المحاولة لاحقًا")
                     }
                 }
             }
             catch let error as NSError {
                 // See error.code (OPPErrorCode) and error.localizedDescription to identify the reason of failure
-                                    self.createalart(titletext: error.localizedDescription, msgtext: "")
+                self.createalart(titletext: self.lang == "en" ? "Payment failed" : "فشلت عملية الدفع", msgtext: self.lang == "en" ? "Please try again later" : "برجاء المحاولة لاحقًا")
             }
         }
     }

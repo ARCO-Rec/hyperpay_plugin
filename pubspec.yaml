@@ -1,7 +1,7 @@
 name: hyperpay_plugin
 description: The HyperPay platform offers a complete, easy-to-use guide to enable seamless integration of our end-to-end payment gateway for mobile.
-version: 3.0.1
-repository: https://github.com/ahmedelkhyary/hyperpay
+version: 3.0.2
+repository: https://github.com/ARCO-Rec/hyperpay_plugin
 
 
 environment:
