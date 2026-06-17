@@ -2,13 +2,13 @@ PODS:
   - Flutter (1.0.0)
   - hyperpay_plugin (0.0.3):
     - Flutter
-    - hyperpay_sdk (~> 5.1.0)
-  - hyperpay_sdk (5.1.0)
+    - hyperpay_sdk (~> 7.11.0)
+  - hyperpay_sdk (7.11.0)
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
   - hyperpay_plugin (from `.symlinks/plugins/hyperpay_plugin/ios`)
-  - hyperpay_sdk (from `https://github.com/ARCO-Rec/oppwamobile-ios-sdk.git`)
+  - hyperpay_sdk (from `https://github.com/ARCO-Rec/oppwamobile-ios-sdk.git`, branch `sdk-7.11.0-mastercard-cert`)
 
 EXTERNAL SOURCES:
   Flutter:
@@ -16,18 +16,19 @@ EXTERNAL SOURCES:
   hyperpay_plugin:
     :path: ".symlinks/plugins/hyperpay_plugin/ios"
   hyperpay_sdk:
+    :branch: sdk-7.11.0-mastercard-cert
     :git: https://github.com/ARCO-Rec/oppwamobile-ios-sdk.git
 
 CHECKOUT OPTIONS:
   hyperpay_sdk:
-    :commit: 83de8ac118109f2c27fc3a28d3e2d9596b99388d
+    :commit: eb8012cab6f4cc02f9b1fb337c21d321f815e950
     :git: https://github.com/ARCO-Rec/oppwamobile-ios-sdk.git
 
 SPEC CHECKSUMS:
-  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
-  hyperpay_plugin: 26d5632113a28ebbeaa7c3a95dc5ab78f829afe3
-  hyperpay_sdk: 46044e04ba7cad39906fbd7b2e41e97fb0c947e3
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  hyperpay_plugin: ff2c22d76624130ab1952f5196baaf8f6412c258
+  hyperpay_sdk: 5bad9647ae284ebb381d415e1441129fdcb2f233
 
-PODFILE CHECKSUM: b82e9a55c179c573a4c1ec519e1c6bdc26bf826b
+PODFILE CHECKSUM: a1c2f2f20def021ea7bf44de5e14d74af06c1b10
 
 COCOAPODS: 1.16.2
