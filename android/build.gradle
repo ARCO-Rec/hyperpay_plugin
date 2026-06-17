@@ -9,7 +9,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.1.3'
+        classpath 'com.android.tools.build:gradle:8.1.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -31,7 +31,7 @@ android {
         namespace('com.excprotection.payment')
     }
 
-    compileSdkVersion 34
+    compileSdkVersion 35
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -39,16 +39,22 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 21
+        minSdkVersion 24
     }
 
     dependencies {
         implementation(name: "oppwa.mobile-release", ext: 'aar')
         debugImplementation(name: "ipworks3ds_sdk", ext: 'aar')
         releaseImplementation(name: "ipworks3ds_sdk_deploy", ext: 'aar')
-        implementation "com.google.android.material:material:1.7.0"
-        implementation "androidx.appcompat:appcompat:1.5.1"
+        implementation "com.google.android.material:material:1.12.0"
+        implementation "androidx.appcompat:appcompat:1.7.0"
+        implementation "androidx.recyclerview:recyclerview:1.4.0"
+        implementation "androidx.browser:browser:1.8.0"
+        implementation "androidx.fragment:fragment-ktx:1.8.6"
+        implementation "androidx.constraintlayout:constraintlayout:2.2.1"
+        implementation "androidx.webkit:webkit:1.13.0"
+        implementation "com.google.code.gson:gson:2.11.0"
+        implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7"
         implementation 'com.google.android.gms:play-services-wallet:19.1.0'
-        implementation "androidx.browser:browser:1.4.0"
     }
 }

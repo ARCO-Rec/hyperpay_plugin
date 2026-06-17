@@ -34,7 +34,7 @@ target 'Runner' do
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
 
-pod 'hyperpay_sdk', :git => 'https://github.com/ARCO-Rec/oppwamobile-ios-sdk.git'
+pod 'hyperpay_sdk', :git => 'https://github.com/ARCO-Rec/oppwamobile-ios-sdk.git', :branch => 'sdk-7.11.0-mastercard-cert'
 
 $static_framework = ['hyperpay_plugin']
 
