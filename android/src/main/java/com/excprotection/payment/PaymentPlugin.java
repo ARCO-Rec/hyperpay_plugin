@@ -39,6 +39,7 @@ import com.oppwa.mobile.connect.payment.token.Token;
 import com.oppwa.mobile.connect.payment.token.TokenPaymentParams;
 import com.oppwa.mobile.connect.provider.Connect;
 import com.oppwa.mobile.connect.provider.ITransactionListener;
+import com.oppwa.mobile.connect.provider.ThreeDSWorkflowListener;
 import com.oppwa.mobile.connect.provider.Transaction;
 import com.oppwa.mobile.connect.provider.TransactionType;
 
@@ -56,7 +57,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class PaymentPlugin implements
-        PluginRegistry.ActivityResultListener, ActivityAware, ITransactionListener, FlutterPlugin, MethodCallHandler, PluginRegistry.NewIntentListener {
+        PluginRegistry.ActivityResultListener, ActivityAware, ITransactionListener, ThreeDSWorkflowListener, FlutterPlugin, MethodCallHandler, PluginRegistry.NewIntentListener {
 
     private MethodChannel.Result Result;
     private String mode = "";
@@ -212,6 +213,7 @@ public class PaymentPlugin implements
             }
 
             paymentProvider = new OppPaymentProvider(activity.getBaseContext(), providerMode);
+            paymentProvider.setThreeDSWorkflowListener(this);
 
             //Submit Transaction
             //Listen for transaction Completed - transaction Failed
@@ -319,6 +321,7 @@ public class PaymentPlugin implements
                 }
 
                 paymentProvider = new OppPaymentProvider(activity.getBaseContext(), providerMode);
+                paymentProvider.setThreeDSWorkflowListener(this);
 
                 //Submit Transaction
                 //Listen for transaction Completed - transaction Failed
@@ -355,6 +358,7 @@ public class PaymentPlugin implements
             Transaction transaction = new Transaction(stcPayPaymentParams);
 
             paymentProvider = new OppPaymentProvider(activity.getBaseContext(), providerMode);
+            paymentProvider.setThreeDSWorkflowListener(this);
 
             //Submit Transaction
             //Listen for transaction Completed - transaction Failed
@@ -466,6 +470,18 @@ public class PaymentPlugin implements
     public void transactionFailed(@NonNull Transaction transaction, @NonNull PaymentError paymentError) {
         error("Transaction failed", paymentError.getErrorMessage(), paymentError.getErrorInfo()
         );
+    }
+
+    /**
+     * Without this, the SDK has no Activity to present the native 3-D Secure
+     * challenge screen in, so any card that requires a challenge (as opposed to a
+     * frictionless transaction) fails or hangs on the CustomUI/StoredCards/CustomUISTC
+     * paths - ReadyUI is unaffected because it uses the SDK's own CheckoutActivity,
+     * which wires this up internally.
+     */
+    @Override
+    public Activity onThreeDSChallengeRequired() {
+        return activity;
     }
 
     @Override
