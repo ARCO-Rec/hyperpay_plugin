@@ -34,6 +34,8 @@ import com.oppwa.mobile.connect.exception.PaymentException;
 import com.oppwa.mobile.connect.payment.BrandsValidation;
 import com.oppwa.mobile.connect.payment.CheckoutInfo;
 import com.oppwa.mobile.connect.payment.ImagesRequest;
+import com.oppwa.mobile.connect.payment.token.Card;
+import com.oppwa.mobile.connect.payment.token.Token;
 import com.oppwa.mobile.connect.payment.token.TokenPaymentParams;
 import com.oppwa.mobile.connect.provider.Connect;
 import com.oppwa.mobile.connect.provider.ITransactionListener;
@@ -45,8 +47,12 @@ import android.os.Handler;
 import android.os.Looper;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class PaymentPlugin implements
@@ -62,6 +68,10 @@ public class PaymentPlugin implements
     private String setStorePaymentDetailsMode = "";
     private String number, holder, cvv, year, month;
     private String TokenID = "";
+    private String Type = "";
+    private String CheckoutId = "";
+    private String checkoutInfoPurpose = "";
+    private String captureSuccessStatus = "";
     private OppPaymentProvider paymentProvider = null;
     private Activity activity;
     private Context context;
@@ -94,6 +104,8 @@ public class PaymentPlugin implements
             mode = call.argument("mode");
             Lang = call.argument("lang");
             ShopperResultUrl = call.argument("ShopperResultUrl");
+            CheckoutId = checkoutId;
+            Type = type;
 
             switch (type != null ? type : "NullType") {
                 case "ReadyUI":
@@ -121,6 +133,11 @@ public class PaymentPlugin implements
                 case "CustomUISTC":
                     number = call.argument("phone_number");
                     openCustomUISTC(checkoutId);
+                    break;
+
+                case "GetCheckoutInfo":
+                    requestCheckoutInfo(checkoutId, "GetCheckoutInfo", "");
+                    break;
 
                 default:
                     error("1", "THIS TYPE NO IMPLEMENT" + type, "");
@@ -204,6 +221,48 @@ public class PaymentPlugin implements
             e.printStackTrace();
             error("3", e.getLocalizedMessage(), "");
         }
+    }
+
+    /**
+     * Requests checkout info from the server, either to list a shopper's saved cards
+     * ("GetCheckoutInfo") or to capture the token created by a just-completed
+     * tokenization-enabled payment ("CaptureToken"). Result is delivered asynchronously
+     * via {@link #paymentConfigRequestSucceeded} / {@link #paymentConfigRequestFailed}.
+     */
+    private void requestCheckoutInfo(String checkoutId, String purpose, String captureStatus) {
+        checkoutInfoPurpose = purpose;
+        captureSuccessStatus = captureStatus;
+
+        boolean resultMode = mode.equals("test");
+        Connect.ProviderMode providerMode = resultMode ? Connect.ProviderMode.TEST : Connect.ProviderMode.LIVE;
+
+        paymentProvider = new OppPaymentProvider(activity.getBaseContext(), providerMode);
+        paymentProvider.requestCheckoutInfo(checkoutId, this);
+    }
+
+    private Map<String, Object> tokenToMap(Token token) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("tokenId", token.getTokenId());
+        map.put("paymentBrand", token.getPaymentBrand());
+        Card card = token.getCard();
+        if (card != null) {
+            map.put("last4Digits", card.getLast4Digits());
+            map.put("expiryMonth", card.getExpiryMonth());
+            map.put("expiryYear", card.getExpiryYear());
+            map.put("holder", card.getHolder());
+        }
+        return map;
+    }
+
+    private List<Map<String, Object>> tokensToList(CheckoutInfo checkoutInfo) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        Token[] tokens = checkoutInfo.getTokens();
+        if (tokens != null) {
+            for (Token token : tokens) {
+                list.add(tokenToMap(token));
+            }
+        }
+        return list;
     }
 
     private void openCustomUI(String checkoutId) {
@@ -318,7 +377,11 @@ public class PaymentPlugin implements
                 // String resourcePath = data.getStringExtra(CheckoutActivity.CHECKOUT_RESULT_RESOURCE_PATH);
                 if (transaction.getTransactionType() == TransactionType.SYNC) {
                     /* check the result of synchronous transaction */
-                    success("Sync");
+                    if (setStorePaymentDetailsMode.equals("true")) {
+                        requestCheckoutInfo(CheckoutId, "CaptureToken", "Sync");
+                    } else {
+                        success("Sync");
+                    }
                 }
 
                 break;
@@ -370,7 +433,11 @@ public class PaymentPlugin implements
     public void transactionCompleted(@NonNull Transaction transaction) {
 
         if (transaction.getTransactionType() == TransactionType.SYNC) {
-            success("Sync");
+            if ("CustomUI".equals(Type) && EnabledTokenization.equals("true")) {
+                requestCheckoutInfo(CheckoutId, "CaptureToken", "Sync");
+            } else {
+                success("Sync");
+            }
         } else {
             /* wait for the callback in the s */
             Uri uri = Uri.parse(transaction.getRedirectUrl());
@@ -423,12 +490,32 @@ public class PaymentPlugin implements
 
     @Override
     public void paymentConfigRequestSucceeded(@NonNull CheckoutInfo checkoutInfo) {
-        ITransactionListener.super.paymentConfigRequestSucceeded(checkoutInfo);
+        if ("GetCheckoutInfo".equals(checkoutInfoPurpose)) {
+            success(Collections.singletonMap("tokens", tokensToList(checkoutInfo)));
+        } else if ("CaptureToken".equals(checkoutInfoPurpose)) {
+            // Never fail the payment result just because token capture failed.
+            Token[] tokens = checkoutInfo.getTokens();
+            if (tokens != null && tokens.length > 0) {
+                Map<String, Object> resultMap = tokenToMap(tokens[tokens.length - 1]);
+                resultMap.put("status", captureSuccessStatus);
+                success(resultMap);
+            } else {
+                success(captureSuccessStatus);
+            }
+        } else {
+            ITransactionListener.super.paymentConfigRequestSucceeded(checkoutInfo);
+        }
     }
 
     @Override
     public void paymentConfigRequestFailed(@NonNull PaymentError paymentError) {
-        ITransactionListener.super.paymentConfigRequestFailed(paymentError);
+        if ("GetCheckoutInfo".equals(checkoutInfoPurpose)) {
+            error("1", paymentError.getErrorMessage(), paymentError.getErrorInfo());
+        } else if ("CaptureToken".equals(checkoutInfoPurpose)) {
+            success(captureSuccessStatus);
+        } else {
+            ITransactionListener.super.paymentConfigRequestFailed(paymentError);
+        }
     }
 
     @Override

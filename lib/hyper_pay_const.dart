@@ -9,6 +9,7 @@ class PaymentConst {
   static const String customUi = "CustomUI";
   static const String customUiSTC = "CustomUISTC";
   static const String storedCards = "StoredCards";
+  static const String getCheckoutInfo = "GetCheckoutInfo";
   static const String methodCall = "gethyperpayresponse";
   static const String success = "success";
   static const String error = "error";
@@ -29,13 +30,27 @@ class PaymentBrands {
 
 /// This class holds the data for a payment result,
 /// containing an errorString (nullable) and a paymentResult object.
+///
+/// When the payment was made with tokenization enabled (a "save this card"
+/// checkout), [tokenId] and the related card fields are populated with the
+/// newly created saved-card token, if the native SDK was able to capture it.
 class PaymentResultData {
   String? errorString;
   PaymentResult paymentResult;
+  String? tokenId;
+  String? paymentBrand;
+  String? last4Digits;
+  String? expiryMonth;
+  String? expiryYear;
 
   PaymentResultData({
     this.errorString,
     required this.paymentResult,
+    this.tokenId,
+    this.paymentBrand,
+    this.last4Digits,
+    this.expiryMonth,
+    this.expiryYear,
   });
 }
 

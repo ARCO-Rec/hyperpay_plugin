@@ -92,7 +92,16 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
                 self.cvv = (args!["cvv"] as? String)!
                 self.setStorePaymentDetailsMode = (args!["EnabledTokenization"] as? String)!
                 self.openCustomUI(checkoutId: self.checkoutid, result1: result)
-                
+
+            case "StoredCards":
+                self.brand = (args!["brand"] as? String) ?? ""
+                self.cvv = (args!["cvv"] as? String) ?? ""
+                self.tokenID = (args!["TokenID"] as? String) ?? ""
+                self.openStoredCardPayment(checkoutId: self.checkoutid, result1: result)
+
+            case "GetCheckoutInfo":
+                self.fetchCheckoutInfo(checkoutId: self.checkoutid, purpose: .listSavedCards, result1: result)
+
             default:
                 result(FlutterError(code: "1", message: "Method name is not found", details: ""))
             }
@@ -191,8 +200,12 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
                         NotificationCenter.default.addObserver(self, selector: #selector(self.didReceiveAsynchronousPaymentCallback), name: Notification.Name(rawValue: "AsyncPaymentCompletedNotificationKey"), object: nil)
                     } else {
                         // Request payment status for the synchronous transaction from your server using transactionPath.resourcePath or just checkout id.
-                        DispatchQueue.main.async {
-                            result1("Sync")
+                        if self.setStorePaymentDetailsMode == "true" {
+                            self.fetchCheckoutInfo(checkoutId: checkoutId, purpose: .captureToken(successStatus: "Sync"), result1: result1)
+                        } else {
+                            DispatchQueue.main.async {
+                                result1("Sync")
+                            }
                         }
                     }
                 }
@@ -246,7 +259,11 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
                     }
                     else if transaction.type == .synchronous {
                         // Send request to your server to obtain transaction status
-                        result1("success")
+                        if self.setStorePaymentDetailsMode == "true" {
+                            self.fetchCheckoutInfo(checkoutId: checkoutId, purpose: .captureToken(successStatus: "success"), result1: result1)
+                        } else {
+                            result1("success")
+                        }
                     }
                     else {
                         // Handle the error
@@ -262,9 +279,89 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
     }
     
     
+    private func openStoredCardPayment(checkoutId: String, result1: @escaping FlutterResult) {
+        do {
+            let params = try OPPTokenPaymentParams.tokenPaymentParams(
+                checkoutID: checkoutId,
+                tokenID: self.tokenID,
+                cardPaymentBrand: self.brand.isEmpty ? nil : self.brand,
+                cvv: self.cvv.isEmpty ? nil : self.cvv)
+            params.shopperResultURL = self.shopperResultURL + "://result"
+            self.transaction = OPPTransaction(paymentParams: params)
+            self.provider.submitTransaction(self.transaction!) {
+                (transaction, error) in
+                guard let transaction = self.transaction else {
+                    result1(FlutterError.init(code: "1", message: "ProcessingPaymentError", details: error?.localizedDescription))
+                    return
+                }
+                if transaction.type == .asynchronous {
+                    self.safariVC = SFSafariViewController(url: self.transaction!.redirectURL!)
+                    self.safariVC?.delegate = self;
+                    UIApplication.shared.windows.first?.rootViewController?.present(self.safariVC!, animated: true, completion: nil)
+                }
+                else if transaction.type == .synchronous {
+                    self.fetchCheckoutInfo(checkoutId: checkoutId, purpose: .captureToken(successStatus: "Sync"), result1: result1)
+                }
+                else {
+                    result1(FlutterError.init(code: "1", message: "ProcessingPaymentError", details: error?.localizedDescription))
+                }
+            }
+        }
+        catch let error as NSError {
+            // See error.code (OPPErrorCode) and error.localizedDescription to identify the reason of failure
+            result1(FlutterError.init(code: "1", message: "ProcessingPaymentError", details: error.localizedDescription))
+        }
+    }
+
+    /// Purpose for a `requestCheckoutInfo` call: either listing a shopper's saved cards,
+    /// or capturing the token created by a just-completed tokenization-enabled payment.
+    private enum CheckoutInfoPurpose {
+        case listSavedCards
+        case captureToken(successStatus: String)
+    }
+
+    private func fetchCheckoutInfo(checkoutId: String, purpose: CheckoutInfoPurpose, result1: @escaping FlutterResult) {
+        self.provider.requestCheckoutInfo(withCheckoutID: checkoutId) { (checkoutInfo, error) in
+            DispatchQueue.main.async {
+                switch purpose {
+                case .listSavedCards:
+                    if let error = error {
+                        result1(FlutterError.init(code: "1", message: "ProcessingPaymentError", details: error.localizedDescription))
+                        return
+                    }
+                    let tokens = (checkoutInfo?.tokens ?? []).map { self.tokenToMap($0) }
+                    result1(["tokens": tokens])
+                case .captureToken(let successStatus):
+                    // Never fail the payment result just because token capture failed.
+                    if let token = checkoutInfo?.tokens?.last {
+                        var map = self.tokenToMap(token)
+                        map["status"] = successStatus
+                        result1(map)
+                    } else {
+                        result1(successStatus)
+                    }
+                }
+            }
+        }
+    }
+
+    private func tokenToMap(_ token: OPPToken) -> [String: Any] {
+        var map: [String: Any] = [
+            "tokenId": token.tokenID,
+            "paymentBrand": token.paymentBrand,
+        ]
+        if let card = token.card {
+            map["last4Digits"] = card.last4Digits
+            map["expiryMonth"] = card.expiryMonth
+            map["expiryYear"] = card.expiryYear
+            map["holder"] = card.holder
+        }
+        return map
+    }
+
     @objc func didReceiveAsynchronousPaymentCallback(result: @escaping FlutterResult) {
         NotificationCenter.default.removeObserver(self, name: Notification.Name(rawValue: "AsyncPaymentCompletedNotificationKey"), object: nil)
-        if self.type == "ReadyUI" || self.type=="APPLEPAY" || self.type=="StoredCards" {
+        if self.type == "ReadyUI" || self.type=="APPLEPAY" {
             self.checkoutProvider?.dismissCheckout(animated: true) {
                 DispatchQueue.main.async {
                     result("success")

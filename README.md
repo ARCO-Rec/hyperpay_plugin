@@ -136,7 +136,7 @@ Brands Names support [ VISA , MASTER , MADA , STC_PAY , APPLEPAY]
 
 
 ```
-If you want using `CustomUI` - now for android only next release we will support IOS
+If you want using `CustomUI`
 ```
  payRequestNowCustomUi(
       {required String brandName, required String checkoutId}) async {
@@ -177,6 +177,39 @@ get check the payment status after request
       // do something
     }
 ```
+
+## Save Cards / Pay With a Saved Card
+
+### 1. Save a card during checkout
+Set `setStorePaymentDetailsMode: true` (ReadyUI) or `enabledTokenization: true` (CustomUI) as shown above. This requires the `checkoutId` to be created server-side for a registered customer, so HyperPay knows who to attach the saved card to.
+
+If the payment succeeds and the server was able to save the card, `PaymentResultData` carries the new token:
+```
+    if (paymentResultData.tokenId != null) {
+      // paymentResultData.tokenId, .paymentBrand, .last4Digits, .expiryMonth, .expiryYear
+    }
+```
+
+### 2. List a shopper's saved cards
+Using a fresh `checkoutId` created for the same registered customer:
+```
+final List<SavedCard> savedCards =
+    await flutterHyperPay.getCheckoutInfo(checkoutId: checkoutId);
+```
+
+### 3. Pay with a saved card
+```
+    paymentResultData = await flutterHyperPay.payWithStoredCards(
+      storedCards: StoredCards(
+        checkoutId: checkoutId, // a fresh checkoutId
+        tokenId: savedCard.tokenId,
+        brandName: savedCard.paymentBrand,
+        cvv: cvv, // ask the shopper again unless skipCVV is configured server-side
+      ),
+    );
+```
+`payWithSoredCards` (note the typo) still works and is kept for backward compatibility, but is `@Deprecated` in favor of `payWithStoredCards`.
+
 `ReadyUI`
 change color in `android` platform
 open `android/app/src/main/res/values` and add the following lines

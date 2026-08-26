@@ -21,10 +21,9 @@ Future<PaymentResultData> implementPaymentCustomUI({
   required String cvv,
   required bool enabledTokenization,
 }) async {
-  String transactionStatus;
   var platform = MethodChannel(channelName);
   try {
-    final String? result = await platform.invokeMethod(
+    final dynamic result = await platform.invokeMethod(
       PaymentConst.methodCall,
       getCustomUiModelCards(
         brand: brand,
@@ -40,11 +39,9 @@ Future<PaymentResultData> implementPaymentCustomUI({
         enabledTokenization: enabledTokenization,
       ),
     );
-    transactionStatus = '$result';
-    return PaymentResultManger.getPaymentResult(transactionStatus);
+    return PaymentResultManger.getPaymentResult(result);
   } on PlatformException catch (e) {
-    transactionStatus = "${e.message}";
-    return PaymentResultManger.getPaymentResult(transactionStatus);
+    return PaymentResultManger.getPaymentResult("${e.message}");
   }
 }
 

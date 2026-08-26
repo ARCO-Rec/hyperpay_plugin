@@ -1,3 +1,11 @@
+## 3.1.0
+* Add iOS support for `payWithStoredCards` (pay with a saved/tokenized card) - previously Android-only.
+* Fix an iOS bug where an asynchronous (3DS-redirect) stored-card payment would never resolve.
+* Return the saved-card token (id, brand, last4, expiry) from tokenization-enabled ReadyUI/CustomUI payments on both platforms, via new optional fields on `PaymentResultData`.
+* Add `FlutterHyperPay.getCheckoutInfo(checkoutId)` to list a shopper's saved cards on both platforms.
+* Add `payWithStoredCards` as the correctly-spelled alias for `payWithSoredCards` (now `@Deprecated`, still functional).
+* Fix an Android bug where `CustomUISTC` always also returned a "not implemented" error after starting the payment (missing `break`).
+
 ## 2.0.1
 * update hyperPay sdk plugin IOS issue
 

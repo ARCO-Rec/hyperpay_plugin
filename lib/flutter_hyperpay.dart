@@ -17,6 +17,8 @@ part 'custom_ui/method_channel_custom_ui.dart';
 part 'custom_ui/method_channel_custom_ui_stc.dart';
 part 'store_cards/stored_cards.dart';
 part 'store_cards/method_channel_store_cards.dart';
+part 'checkout_info/saved_card.dart';
+part 'checkout_info/method_channel_checkout_info.dart';
 part 'enum.dart';
 
 class FlutterHyperPay {
@@ -99,6 +101,7 @@ class FlutterHyperPay {
   /// It accepts an argument of type StoredCards and makes a call to the implementPaymentStoredCards
   /// function with the values required for the payment.
   /// It returns a Future<PaymentResultData> which is the outcome of the payment.
+  @Deprecated('Use payWithStoredCards instead (same behavior, correct spelling)')
   Future<PaymentResultData> payWithSoredCards(
       {required StoredCards storedCards}) async {
     return await implementPaymentStoredCards(
@@ -110,6 +113,26 @@ class FlutterHyperPay {
       channelName: channelName,
       paymentMode: paymentMode,
       lang: lang,
+    );
+  }
+
+  /// Pays with a previously saved/tokenized card. Correctly-spelled alias of
+  /// [payWithSoredCards] - use this for all new call sites.
+  // ignore: deprecated_member_use_from_same_package
+  Future<PaymentResultData> payWithStoredCards(
+          {required StoredCards storedCards}) =>
+      payWithSoredCards(storedCards: storedCards);
+
+  /// Fetches checkout info for [checkoutId] and returns the shopper's saved
+  /// cards (tokens), so they can be presented as a "pay with a saved card"
+  /// list before calling [payWithStoredCards].
+  Future<List<SavedCard>> getCheckoutInfo({required String checkoutId}) async {
+    return await implementGetCheckoutInfo(
+      checkoutId: checkoutId,
+      channelName: channelName,
+      paymentMode: paymentMode,
+      lang: lang,
+      shopperResultUrl: shopperResultUrl,
     );
   }
 }

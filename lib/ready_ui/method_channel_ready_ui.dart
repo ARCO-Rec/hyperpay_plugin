@@ -16,10 +16,9 @@ Future<PaymentResultData> implementPayment(
     String? companyName = "",
     String? themColorHexIOS,
     required bool setStorePaymentDetailsMode}) async {
-  String transactionStatus;
   var platform = MethodChannel(channelName);
   try {
-    final String? result = await platform.invokeMethod(
+    final dynamic result = await platform.invokeMethod(
       PaymentConst.methodCall,
       getReadyModelCards(
         brands: brands,
@@ -34,11 +33,9 @@ Future<PaymentResultData> implementPayment(
         setStorePaymentDetailsMode: setStorePaymentDetailsMode,
       ),
     );
-    transactionStatus = '$result';
-    return PaymentResultManger.getPaymentResult(transactionStatus);
+    return PaymentResultManger.getPaymentResult(result);
   } on PlatformException catch (e) {
-    transactionStatus = "${e.message}";
-    return PaymentResultManger.getPaymentResult(transactionStatus);
+    return PaymentResultManger.getPaymentResult("${e.message}");
   }
 }
 

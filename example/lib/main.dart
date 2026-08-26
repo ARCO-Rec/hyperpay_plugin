@@ -34,6 +34,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   late FlutterHyperPay flutterHyperPay;
+  List<SavedCard> _savedCards = [];
   @override
   void initState() {
     flutterHyperPay = FlutterHyperPay(
@@ -116,6 +117,54 @@ class _MyHomePageState extends State<MyHomePage> {
                   "STC_PAY",
                   style: TextStyle(fontSize: 20),
                 )),
+            const Divider(),
+            Text(
+              "save a card (custom ui, tokenization on)".toUpperCase(),
+              style: const TextStyle(fontSize: 20, color: Colors.red),
+            ),
+            InkWell(
+                onTap: () async {
+                  String? checkoutId = await getCheckOut();
+                  if (checkoutId != null) {
+                    await payRequestNowSaveCard(checkoutId: checkoutId);
+                  }
+                },
+                child: const Text(
+                  "SAVE_CARD",
+                  style: TextStyle(fontSize: 20),
+                )),
+            const Divider(),
+            Text(
+              "list saved cards".toUpperCase(),
+              style: const TextStyle(fontSize: 20, color: Colors.red),
+            ),
+            InkWell(
+                onTap: () async {
+                  String? checkoutId = await getCheckOut();
+                  if (checkoutId != null) {
+                    await loadSavedCards(checkoutId: checkoutId);
+                  }
+                },
+                child: const Text(
+                  "LIST_SAVED_CARDS",
+                  style: TextStyle(fontSize: 20),
+                )),
+            for (final card in _savedCards)
+              InkWell(
+                  onTap: () async {
+                    String? checkoutId = await getCheckOut();
+                    if (checkoutId != null) {
+                      await payRequestNowStoredCard(
+                          checkoutId: checkoutId, card: card);
+                    }
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                      "PAY WITH ${card.paymentBrand} •••• ${card.last4Digits ?? ''}",
+                      style: const TextStyle(fontSize: 18),
+                    ),
+                  )),
           ],
         ),
       ),
@@ -190,6 +239,56 @@ class _MyHomePageState extends State<MyHomePage> {
     paymentResultData = await flutterHyperPay.customUISTC(
       customUISTC:
           CustomUISTC(checkoutId: checkoutId, phoneNumber: phoneNumber),
+    );
+
+    if (paymentResultData.paymentResult == PaymentResult.sync) {
+      // do something
+    }
+  }
+
+  /// Pays with `enabledTokenization: true` so the card is saved server-side.
+  /// On success, [PaymentResultData.tokenId] carries the new saved-card token.
+  payRequestNowSaveCard({required String checkoutId}) async {
+    PaymentResultData paymentResultData = await flutterHyperPay.customUICards(
+      customUI: CustomUI(
+        brandName: "MADA",
+        checkoutId: checkoutId,
+        cardNumber: "4464040000000007",
+        holderName: "test name",
+        month: '12',
+        year: '2028',
+        cvv: '123',
+        enabledTokenization: true,
+      ),
+    );
+
+    dev.log(
+        "status=${paymentResultData.paymentResult} tokenId=${paymentResultData.tokenId} brand=${paymentResultData.paymentBrand}",
+        name: "SaveCard");
+  }
+
+  /// Fetches checkout info for a fresh checkout id and lists the shopper's
+  /// saved cards (requires the checkout id to be scoped to a registered
+  /// customer server-side; see README).
+  loadSavedCards({required String checkoutId}) async {
+    final cards =
+        await flutterHyperPay.getCheckoutInfo(checkoutId: checkoutId);
+    setState(() {
+      _savedCards = cards;
+    });
+  }
+
+  /// Pays with a previously saved card using its token id.
+  payRequestNowStoredCard(
+      {required String checkoutId, required SavedCard card}) async {
+    PaymentResultData paymentResultData =
+        await flutterHyperPay.payWithStoredCards(
+      storedCards: StoredCards(
+        checkoutId: checkoutId,
+        tokenId: card.tokenId,
+        brandName: card.paymentBrand,
+        cvv: '123',
+      ),
     );
 
     if (paymentResultData.paymentResult == PaymentResult.sync) {
