@@ -37,4 +37,26 @@ class PaymentResultManger {
           errorString: '', paymentResult: PaymentResult.noResult);
     }
   }
+
+  /// Builds a [PaymentResultData] from a [PlatformException] thrown by the
+  /// native side (a real payment/validation failure, on either platform -
+  /// `FlutterError`/`result.error(...)` both surface as this on the Dart
+  /// side). Unlike [getPaymentResult]/[_resultForStatus] - which only ever
+  /// recognize the plain success-path status strings and otherwise return
+  /// an empty [PaymentResultData.errorString] no matter what was passed in
+  /// - this preserves the real reason: [PlatformException.details] is where
+  /// native puts the underlying SDK/server error description (see
+  /// `SwiftPaymentPlugin.openCustomUI`'s `error?.localizedDescription`, and
+  /// Android's `PaymentError.getErrorInfo()`), with [PlatformException.code]
+  /// falling back for it when `details` is absent.
+  static PaymentResultData fromPlatformException(PlatformException e) {
+    final parts = [
+      e.message,
+      if (e.details != null) e.details.toString(),
+    ].where((s) => s != null && s.isNotEmpty).toSet().join(': ');
+    return PaymentResultData(
+      errorString: parts.isEmpty ? e.code : parts,
+      paymentResult: PaymentResult.error,
+    );
+  }
 }

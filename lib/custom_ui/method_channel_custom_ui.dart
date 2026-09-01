@@ -41,7 +41,7 @@ Future<PaymentResultData> implementPaymentCustomUI({
     );
     return PaymentResultManger.getPaymentResult(result);
   } on PlatformException catch (e) {
-    return PaymentResultManger.getPaymentResult("${e.message}");
+    return PaymentResultManger.fromPlatformException(e);
   }
 }
 

@@ -27,8 +27,7 @@ Future<PaymentResultData> implementPaymentCustomUISTC({
     transactionStatus = '$result';
     return PaymentResultManger.getPaymentResult(transactionStatus);
   } on PlatformException catch (e) {
-    transactionStatus = "${e.message}";
-    return PaymentResultManger.getPaymentResult(transactionStatus);
+    return PaymentResultManger.fromPlatformException(e);
   }
 }
 
