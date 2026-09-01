@@ -445,7 +445,14 @@ public class PaymentPlugin implements
     public boolean onNewIntent(@NonNull Intent intent) {
         // TO BACK TO VIEW
         if (intent.getScheme() != null && intent.getScheme().equals(ShopperResultUrl)) {
-            success("Success");
+            // Must match PaymentConst.success ("success", lowercase) on the
+            // Dart side exactly - PaymentResultManger does a case-sensitive
+            // string comparison, so the previous "Success" here silently
+            // fell through to PaymentResult.noResult with an empty
+            // errorString on every async/3DS-challenge completion that
+            // returned via this deep-link path, even though the payment
+            // itself succeeded.
+            success("success");
             return true;
         }
         return false;
