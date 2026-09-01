@@ -221,18 +221,23 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
     private func openCustomUI(checkoutId: String,result1: @escaping FlutterResult) {
         if !OPPCardPaymentParams.isNumberValid(self.number, luhnCheck: true) {
             self.createalart(titletext: "Card Number is Invalid", msgtext: "")
+            result1(FlutterError.init(code: "1", message: "Card Number is Invalid", details: nil))
         }
         else  if !OPPCardPaymentParams.isHolderValid(self.holder) {
             self.createalart(titletext: "Card Holder is Invalid", msgtext: "")
+            result1(FlutterError.init(code: "1", message: "Card Holder is Invalid", details: nil))
         }
         else   if !OPPCardPaymentParams.isCvvValid(self.cvv) {
             self.createalart(titletext: "CVV is Invalid", msgtext: "")
+            result1(FlutterError.init(code: "1", message: "CVV is Invalid", details: nil))
         }
         else  if !OPPCardPaymentParams.isExpiryYearValid(self.year) {
             self.createalart(titletext: "Expiry Year is Invalid", msgtext: "")
+            result1(FlutterError.init(code: "1", message: "Expiry Year is Invalid", details: nil))
         }
         else  if !OPPCardPaymentParams.isExpiryMonthValid(self.month) {
             self.createalart(titletext: "Expiry Month is Invalid", msgtext: "")
+            result1(FlutterError.init(code: "1", message: "Expiry Month is Invalid", details: nil))
         } else {
             do {
                 let params = try OPPCardPaymentParams(checkoutID: checkoutId, paymentBrand: self.brands, holder: self.holder, number: self.number, expiryMonth: self.month, expiryYear: self.year, cvv: self.cvv)
@@ -249,6 +254,7 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
                     guard let transaction = self.transaction else {
                         // Handle invalid transaction, check error
                         self.createalart(titletext: self.lang == "en" ? "Payment failed" : "فشلت عملية الدفع", msgtext: self.lang == "en" ? "Please try again later" : "برجاء المحاولة لاحقًا")
+                        result1(FlutterError.init(code: "1", message: "ProcessingPaymentError", details: error?.localizedDescription))
                         return
                     }
                     if transaction.type == .asynchronous {
@@ -266,14 +272,20 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
                         }
                     }
                     else {
-                        // Handle the error
+                        // Handle the error - see error?.localizedDescription (and the
+                        // NSError's `code`, per OPPErrorCode) for the real reason
+                        // HyperPay rejected this transaction (declined card, invalid/
+                        // expired checkout, brand mismatch, etc.) instead of only
+                        // showing the generic native alert.
                         self.createalart(titletext: self.lang == "en" ? "Payment failed" : "فشلت عملية الدفع", msgtext: self.lang == "en" ? "Please try again later" : "برجاء المحاولة لاحقًا")
+                        result1(FlutterError.init(code: "1", message: "ProcessingPaymentError", details: error?.localizedDescription))
                     }
                 }
             }
             catch let error as NSError {
                 // See error.code (OPPErrorCode) and error.localizedDescription to identify the reason of failure
                 self.createalart(titletext: self.lang == "en" ? "Payment failed" : "فشلت عملية الدفع", msgtext: self.lang == "en" ? "Please try again later" : "برجاء المحاولة لاحقًا")
+                result1(FlutterError.init(code: "1", message: "ProcessingPaymentError", details: error.localizedDescription))
             }
         }
     }
