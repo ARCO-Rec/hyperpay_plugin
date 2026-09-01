@@ -198,7 +198,15 @@ public class PaymentPlugin implements
 
             TokenPaymentParams paymentParams = new TokenPaymentParams(checkoutId, TokenID, brands, cvv);
 
-            paymentParams.setShopperResultUrl(ShopperResultUrl + "://result");
+            // shopperResultUrl is optional on PaymentParams - only set it
+            // when the caller actually provided one. Some backends (e.g. a
+            // checkout-preparation service that already registers it with
+            // HyperPay when the checkout is created) reject the payment
+            // submission outright if it's set again here, even to the same
+            // value ("was already set and cannot be overwritten").
+            if (ShopperResultUrl != null && !ShopperResultUrl.isEmpty()) {
+                paymentParams.setShopperResultUrl(ShopperResultUrl + "://result");
+            }
 
             Transaction transaction = new Transaction(paymentParams);
 
@@ -306,7 +314,12 @@ public class PaymentPlugin implements
                         checkoutId, brands, number, holder, month, year, cvv
                 ).setTokenizationEnabled(EnabledTokenizationTemp);//Set Enabled TokenizationTemp
 
-                paymentParams.setShopperResultUrl(ShopperResultUrl + "://result");
+                // shopperResultUrl is optional on PaymentParams - only set it
+                // when the caller actually provided one. See the comment in
+                // storedCardPayment above.
+                if (ShopperResultUrl != null && !ShopperResultUrl.isEmpty()) {
+                    paymentParams.setShopperResultUrl(ShopperResultUrl + "://result");
+                }
 
                 Transaction transaction = new Transaction(paymentParams);
 
@@ -353,7 +366,12 @@ public class PaymentPlugin implements
 
             stcPayPaymentParams.setMobilePhoneNumber(number);
 
-            stcPayPaymentParams.setShopperResultUrl(ShopperResultUrl + "://result");
+            // shopperResultUrl is optional on PaymentParams - only set it
+            // when the caller actually provided one. See the comment in
+            // storedCardPayment above.
+            if (ShopperResultUrl != null && !ShopperResultUrl.isEmpty()) {
+                stcPayPaymentParams.setShopperResultUrl(ShopperResultUrl + "://result");
+            }
 
             Transaction transaction = new Transaction(stcPayPaymentParams);
 

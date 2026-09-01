@@ -176,7 +176,15 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
             }
             checkoutSettings.language = self.lang
             // Set available payment brands for your shop
-            checkoutSettings.shopperResultURL = self.shopperResultURL+"://result"
+            // shopperResultURL is optional on OPPCheckoutSettings - only set
+            // it when the caller actually provided one. Some backends (e.g.
+            // a checkout-preparation service that already registers it with
+            // HyperPay when the checkout is created) reject the payment
+            // submission outright if it's set again here, even to the same
+            // value ("was already set and cannot be overwritten").
+            if !self.shopperResultURL.isEmpty {
+                checkoutSettings.shopperResultURL = self.shopperResultURL+"://result"
+            }
             if self.setStorePaymentDetailsMode == "true" {
                 checkoutSettings.storePaymentDetails = OPPCheckoutStorePaymentDetailsMode.prompt;
             }
@@ -247,7 +255,12 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
                 }
                 params.isTokenizationEnabled=isEnabledTokenization;
                 //set tokenization
-                params.shopperResultURL =  self.shopperResultURL+"://result"
+                // shopperResultURL is optional on OPPPaymentParams - only set
+                // it when the caller actually provided one. See the comment
+                // in openCheckoutUI above.
+                if !self.shopperResultURL.isEmpty {
+                    params.shopperResultURL =  self.shopperResultURL+"://result"
+                }
                 self.transaction  = OPPTransaction(paymentParams: params)
                 self.provider.submitTransaction(self.transaction!) {
                     (transaction, error) in
@@ -298,7 +311,12 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
                 tokenID: self.tokenID,
                 cardPaymentBrand: self.brand.isEmpty ? nil : self.brand,
                 cvv: self.cvv.isEmpty ? nil : self.cvv)
-            params.shopperResultURL = self.shopperResultURL + "://result"
+            // shopperResultURL is optional on OPPPaymentParams - only set it
+            // when the caller actually provided one. See the comment in
+            // openCheckoutUI above.
+            if !self.shopperResultURL.isEmpty {
+                params.shopperResultURL = self.shopperResultURL + "://result"
+            }
             self.transaction = OPPTransaction(paymentParams: params)
             self.provider.submitTransaction(self.transaction!) {
                 (transaction, error) in
