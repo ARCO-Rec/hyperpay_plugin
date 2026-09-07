@@ -60,6 +60,17 @@ public class PaymentPlugin implements
         PluginRegistry.ActivityResultListener, ActivityAware, ITransactionListener, ThreeDSWorkflowListener, FlutterPlugin, MethodCallHandler, PluginRegistry.NewIntentListener {
 
     private MethodChannel.Result Result;
+    /// Custom Tabs request code for the CustomUI/StoredCards/CustomUISTC
+    /// 3DS-challenge hand-off (242 is already used by the ReadyUI
+    /// CheckoutActivity flow below).
+    private static final int PAYMENT_CUSTOM_TABS_REQUEST_CODE = 243;
+    /// Guards against resolving `Result` more than once, and lets
+    /// `onActivityResult`'s Custom Tabs branch tell whether the payment was
+    /// already completed (via `onNewIntent`'s deep-link return) before
+    /// firing its own cancellation fallback. Reset at the start of each new
+    /// CustomUI/StoredCards/CustomUISTC attempt, set `true` immediately
+    /// before every `success`/`error` call reachable from those flows.
+    private boolean paymentCallbackDelivered = false;
     private String mode = "";
     private List<String> brandsReadyUi;
     private String brands = "";
@@ -193,6 +204,8 @@ public class PaymentPlugin implements
     }
 
     private void storedCardPayment(String checkoutId) {
+        // New attempt - nothing has resolved it yet.
+        paymentCallbackDelivered = false;
 
         try {
 
@@ -229,6 +242,7 @@ public class PaymentPlugin implements
 
         } catch (PaymentException e) {
             e.printStackTrace();
+            paymentCallbackDelivered = true;
             error("3", e.getLocalizedMessage(), "");
         }
     }
@@ -276,6 +290,8 @@ public class PaymentPlugin implements
     }
 
     private void openCustomUI(String checkoutId) {
+        // New attempt - nothing has resolved it yet.
+        paymentCallbackDelivered = false;
 
         Toast.makeText(activity.getApplicationContext(), Lang.equals("en_US")
                 ? "Please Wait.."
@@ -341,12 +357,15 @@ public class PaymentPlugin implements
                 paymentProvider.submitTransaction(transaction, this);
 
             } catch (PaymentException e) {
+                paymentCallbackDelivered = true;
                 error("0.1", e.getLocalizedMessage(), "");
             }
         }
     }
 
     private void openCustomUISTC(String checkoutId) {
+        // New attempt - nothing has resolved it yet.
+        paymentCallbackDelivered = false;
 
         Toast.makeText(activity.getApplicationContext(), Lang.equals("en_US")
                 ? "Please Wait.."
@@ -384,6 +403,7 @@ public class PaymentPlugin implements
 
         } catch (PaymentException e) {
             e.printStackTrace();
+            paymentCallbackDelivered = true;
             error("3", e.getLocalizedMessage(), "");
         }
 
@@ -391,6 +411,21 @@ public class PaymentPlugin implements
 
     @Override
     public boolean onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == PAYMENT_CUSTOM_TABS_REQUEST_CODE) {
+            // Returning here always means the user backed out of the 3DS
+            // challenge (system back gesture, the Custom Tab's own close
+            // button) without it ever completing - a genuine completion
+            // arrives separately via onNewIntent (a deep-link Intent
+            // matching ShopperResultUrl), which sets
+            // paymentCallbackDelivered first. Without this branch, backing
+            // out left the pending Result (and the Dart-side Future)
+            // unresolved forever - the reported "infinite loading" bug.
+            if (!paymentCallbackDelivered) {
+                paymentCallbackDelivered = true;
+                error("2", "OperationCancelledError", "");
+            }
+            return true;
+        }
         switch (resultCode) {
             case CheckoutActivity.RESULT_OK:
                 /* transaction completed */
@@ -452,6 +487,7 @@ public class PaymentPlugin implements
             // errorString on every async/3DS-challenge completion that
             // returned via this deep-link path, even though the payment
             // itself succeeded.
+            paymentCallbackDelivered = true;
             success("success");
             return true;
         }
@@ -462,13 +498,18 @@ public class PaymentPlugin implements
     public void transactionCompleted(@NonNull Transaction transaction) {
 
         if (transaction.getTransactionType() == TransactionType.SYNC) {
+            paymentCallbackDelivered = true;
             if ("CustomUI".equals(Type) && EnabledTokenization.equals("true")) {
                 requestCheckoutInfo(CheckoutId, "CaptureToken", "Sync");
             } else {
                 success("Sync");
             }
         } else {
-            /* wait for the callback in the s */
+            // Still pending - not resolved yet. The user may complete the
+            // challenge (handled via onNewIntent) or back out of it
+            // (handled via the PAYMENT_CUSTOM_TABS_REQUEST_CODE branch of
+            // onActivityResult, since launchCustomTabs now launches via
+            // startActivityForResult instead of a plain external launch).
             Uri uri = Uri.parse(transaction.getRedirectUrl());
 
             launchCustomTabs(uri);
@@ -487,12 +528,18 @@ public class PaymentPlugin implements
                 .build();
 
         customTabsIntent.intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-        customTabsIntent.launchUrl(activity, uri);
+        // Launched via startActivityForResult (not launchUrl) specifically
+        // so onActivityResult fires when the user backs out of the 3DS
+        // challenge without completing it - previously nothing observed
+        // that at all, leaving the pending Result (and the Dart-side
+        // Future) unresolved forever.
+        activity.startActivityForResult(customTabsIntent.intent, PAYMENT_CUSTOM_TABS_REQUEST_CODE);
 
     }
 
     @Override
     public void transactionFailed(@NonNull Transaction transaction, @NonNull PaymentError paymentError) {
+        paymentCallbackDelivered = true;
         error("Transaction failed", paymentError.getErrorMessage(), paymentError.getErrorInfo()
         );
     }

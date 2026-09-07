@@ -34,6 +34,14 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
     var checkoutProvider: OPPCheckoutProvider?
     var Presult:FlutterResult?
     var window: UIWindow?
+    /// Guards against resolving the pending `Presult` more than once, and
+    /// lets `safariViewControllerDidFinish` tell whether the payment was
+    /// already completed through the normal redirect-callback path before
+    /// firing its own cancellation fallback. Reset at the start of each new
+    /// CustomUI/StoredCards attempt (`openCustomUI`/`openStoredCardPayment`),
+    /// set `true` immediately before every `result1`/`Presult` call in
+    /// those two flows.
+    var paymentCallbackDelivered = false
     
     public static func register(with registrar: FlutterPluginRegistrar) {
         let buttonFactory = ApplePayButtonViewFactory(messenger:registrar.messenger())
@@ -227,24 +235,32 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
     
     
     private func openCustomUI(checkoutId: String,result1: @escaping FlutterResult) {
+        // New attempt - nothing has resolved it yet, and any leftover
+        // safariVC from a prior abandoned attempt is no longer relevant.
+        self.paymentCallbackDelivered = false
         if !OPPCardPaymentParams.isNumberValid(self.number, luhnCheck: true) {
             self.createalart(titletext: "Card Number is Invalid", msgtext: "")
+            self.paymentCallbackDelivered = true
             result1(FlutterError.init(code: "1", message: "Card Number is Invalid", details: nil))
         }
         else  if !OPPCardPaymentParams.isHolderValid(self.holder) {
             self.createalart(titletext: "Card Holder is Invalid", msgtext: "")
+            self.paymentCallbackDelivered = true
             result1(FlutterError.init(code: "1", message: "Card Holder is Invalid", details: nil))
         }
         else   if !OPPCardPaymentParams.isCvvValid(self.cvv) {
             self.createalart(titletext: "CVV is Invalid", msgtext: "")
+            self.paymentCallbackDelivered = true
             result1(FlutterError.init(code: "1", message: "CVV is Invalid", details: nil))
         }
         else  if !OPPCardPaymentParams.isExpiryYearValid(self.year) {
             self.createalart(titletext: "Expiry Year is Invalid", msgtext: "")
+            self.paymentCallbackDelivered = true
             result1(FlutterError.init(code: "1", message: "Expiry Year is Invalid", details: nil))
         }
         else  if !OPPCardPaymentParams.isExpiryMonthValid(self.month) {
             self.createalart(titletext: "Expiry Month is Invalid", msgtext: "")
+            self.paymentCallbackDelivered = true
             result1(FlutterError.init(code: "1", message: "Expiry Month is Invalid", details: nil))
         } else {
             do {
@@ -267,10 +283,15 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
                     guard let transaction = self.transaction else {
                         // Handle invalid transaction, check error
                         self.createalart(titletext: self.lang == "en" ? "Payment failed" : "فشلت عملية الدفع", msgtext: self.lang == "en" ? "Please try again later" : "برجاء المحاولة لاحقًا")
+                        self.paymentCallbackDelivered = true
                         result1(FlutterError.init(code: "1", message: "ProcessingPaymentError", details: error?.localizedDescription))
                         return
                     }
                     if transaction.type == .asynchronous {
+                        // Still pending - not resolved yet. The user may
+                        // complete the challenge (handled via
+                        // application(_:open:options:)) or back out of it
+                        // (handled via safariViewControllerDidFinish).
                         self.safariVC = SFSafariViewController(url: self.transaction!.redirectURL!)
                         self.safariVC?.delegate = self;
                         //    self.present(self.safariVC!, animated: true, completion: nil)
@@ -278,6 +299,7 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
                     }
                     else if transaction.type == .synchronous {
                         // Send request to your server to obtain transaction status
+                        self.paymentCallbackDelivered = true
                         if self.setStorePaymentDetailsMode == "true" {
                             self.fetchCheckoutInfo(checkoutId: checkoutId, purpose: .captureToken(successStatus: "success"), result1: result1)
                         } else {
@@ -291,6 +313,7 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
                         // expired checkout, brand mismatch, etc.) instead of only
                         // showing the generic native alert.
                         self.createalart(titletext: self.lang == "en" ? "Payment failed" : "فشلت عملية الدفع", msgtext: self.lang == "en" ? "Please try again later" : "برجاء المحاولة لاحقًا")
+                        self.paymentCallbackDelivered = true
                         result1(FlutterError.init(code: "1", message: "ProcessingPaymentError", details: error?.localizedDescription))
                     }
                 }
@@ -298,6 +321,7 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
             catch let error as NSError {
                 // See error.code (OPPErrorCode) and error.localizedDescription to identify the reason of failure
                 self.createalart(titletext: self.lang == "en" ? "Payment failed" : "فشلت عملية الدفع", msgtext: self.lang == "en" ? "Please try again later" : "برجاء المحاولة لاحقًا")
+                self.paymentCallbackDelivered = true
                 result1(FlutterError.init(code: "1", message: "ProcessingPaymentError", details: error.localizedDescription))
             }
         }
@@ -305,6 +329,8 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
     
     
     private func openStoredCardPayment(checkoutId: String, result1: @escaping FlutterResult) {
+        // New attempt - nothing has resolved it yet.
+        self.paymentCallbackDelivered = false
         do {
             let params = try OPPTokenPaymentParams.tokenPaymentParams(
                 checkoutID: checkoutId,
@@ -321,24 +347,30 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
             self.provider.submitTransaction(self.transaction!) {
                 (transaction, error) in
                 guard let transaction = self.transaction else {
+                    self.paymentCallbackDelivered = true
                     result1(FlutterError.init(code: "1", message: "ProcessingPaymentError", details: error?.localizedDescription))
                     return
                 }
                 if transaction.type == .asynchronous {
+                    // Still pending - see the identical comment in
+                    // openCustomUI above.
                     self.safariVC = SFSafariViewController(url: self.transaction!.redirectURL!)
                     self.safariVC?.delegate = self;
                     UIApplication.shared.windows.first?.rootViewController?.present(self.safariVC!, animated: true, completion: nil)
                 }
                 else if transaction.type == .synchronous {
+                    self.paymentCallbackDelivered = true
                     self.fetchCheckoutInfo(checkoutId: checkoutId, purpose: .captureToken(successStatus: "Sync"), result1: result1)
                 }
                 else {
+                    self.paymentCallbackDelivered = true
                     result1(FlutterError.init(code: "1", message: "ProcessingPaymentError", details: error?.localizedDescription))
                 }
             }
         }
         catch let error as NSError {
             // See error.code (OPPErrorCode) and error.localizedDescription to identify the reason of failure
+            self.paymentCallbackDelivered = true
             result1(FlutterError.init(code: "1", message: "ProcessingPaymentError", details: error.localizedDescription))
         }
     }
@@ -400,13 +432,14 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
         }
         
         else {
+            self.paymentCallbackDelivered = true
             self.safariVC?.dismiss(animated: true) {
                 DispatchQueue.main.async {
                     result("success")
                 }
             }
         }
-        
+
     }
     public func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
         var handler:Bool = false
@@ -414,8 +447,26 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
             didReceiveAsynchronousPaymentCallback(result: self.Presult!)
             handler = true
         }
-        
+
         return handler
+    }
+
+    /// Called when the user taps the native "Done" button on the CustomUI/
+    /// StoredCards 3DS-challenge Safari view *without* the redirect ever
+    /// completing (i.e. `application(_:open:options:)` never matched and
+    /// called `didReceiveAsynchronousPaymentCallback`). Without this, that
+    /// scenario left the pending `Presult` unresolved forever - the Dart
+    /// side's `customUICards()`/`payWithStoredCards()` `Future` never
+    /// completed, leaving the app stuck in a loading state indefinitely.
+    /// `paymentCallbackDelivered` guards against double-resolving if this
+    /// fires in a race with a just-completed redirect.
+    public func safariViewControllerDidFinish(_ controller: SFSafariViewController) {
+        NotificationCenter.default.removeObserver(self, name: Notification.Name(rawValue: "AsyncPaymentCompletedNotificationKey"), object: nil)
+        self.safariVC = nil
+        if !self.paymentCallbackDelivered {
+            self.paymentCallbackDelivered = true
+            self.Presult?(FlutterError.init(code: "2", message: "OperationCancelledError", details: nil))
+        }
     }
     
     func createalart(titletext:String,msgtext:String){
