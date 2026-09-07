@@ -12,10 +12,12 @@ Future<PaymentResultData> implementPaymentCustomUISTC({
   required String phoneNumber,
   required String lang,
 }) async {
-  String transactionStatus;
   var platform = MethodChannel(channelName);
   try {
-    final String? result = await platform.invokeMethod(
+    // Must stay `dynamic` - see the identical comment in
+    // implementPaymentStoredCards; a Map-shaped native result must reach
+    // PaymentResultManger, not crash the MethodChannel's own internal cast.
+    final dynamic result = await platform.invokeMethod(
       PaymentConst.methodCall,
       getCustomUiSTCModelCards(
           checkoutId: checkoutId,
@@ -24,8 +26,7 @@ Future<PaymentResultData> implementPaymentCustomUISTC({
           phoneNumber: phoneNumber,
           lang: lang),
     );
-    transactionStatus = '$result';
-    return PaymentResultManger.getPaymentResult(transactionStatus);
+    return PaymentResultManger.getPaymentResult(result);
   } on PlatformException catch (e) {
     return PaymentResultManger.fromPlatformException(e);
   }

@@ -5,10 +5,12 @@ Future<PaymentResultData> implementApplePay({
   required String channelName,
   required PaymentMode paymentMode,
 }) async {
-  String transactionStatus;
   final platform = MethodChannel(channelName);
   try {
-    final String? result = await platform.invokeMethod(
+    // Must stay `dynamic` - see the identical comment in
+    // implementPaymentStoredCards; a Map-shaped native result must reach
+    // PaymentResultManger, not crash the MethodChannel's own internal cast.
+    final dynamic result = await platform.invokeMethod(
       PaymentConst.methodCall,
       getApplePayModel(
         amount: settings.amount,
@@ -25,8 +27,7 @@ Future<PaymentResultData> implementApplePay({
         paymentMode: paymentMode,
       ),
     );
-    transactionStatus = '$result';
-    return PaymentResultManger.getPaymentResult(transactionStatus);
+    return PaymentResultManger.getPaymentResult(result);
   } on PlatformException catch (e) {
     return PaymentResultManger.fromPlatformException(e);
   }

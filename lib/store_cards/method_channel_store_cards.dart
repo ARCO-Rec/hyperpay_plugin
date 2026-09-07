@@ -20,10 +20,15 @@ Future<PaymentResultData> implementPaymentStoredCards({
   required PaymentMode paymentMode,
   required String lang,
 }) async {
-  String transactionStatus;
   var platform = MethodChannel(channelName);
   try {
-    final String? result = await platform.invokeMethod(
+    // Must stay `dynamic` - a synchronous StoredCards payment has native
+    // fetch the checkout info and return a Map (status + token/card fields),
+    // not a bare String. Typing this as String? makes the MethodChannel's
+    // own internal cast throw immediately on any such result, before
+    // PaymentResultManger ever gets a chance to see it - see the identical,
+    // already-fixed pattern in implementPaymentCustomUI/implementPayment.
+    final dynamic result = await platform.invokeMethod(
       PaymentConst.methodCall,
       getPaymentWithCards(
           tokenId: tokenId,
@@ -35,8 +40,7 @@ Future<PaymentResultData> implementPaymentStoredCards({
           paymentMode: paymentMode,
           lang: lang),
     );
-    transactionStatus = '$result';
-    return PaymentResultManger.getPaymentResult(transactionStatus);
+    return PaymentResultManger.getPaymentResult(result);
   } on PlatformException catch (e) {
     return PaymentResultManger.fromPlatformException(e);
   }
