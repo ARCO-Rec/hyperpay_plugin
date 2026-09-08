@@ -534,13 +534,22 @@ public class PaymentPlugin implements
                 .setShareState(CustomTabsIntent.SHARE_STATE_OFF)
                 .build();
 
-        customTabsIntent.intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-        // launchUrl(context, uri) normally sets this internally - since we
-        // bypass it below (to get startActivityForResult instead), it must
-        // be set explicitly here. Without it the launched intent carries no
-        // data at all, so Android can't match it to a browser's intent
-        // filter and falls back to showing its generic "Open with" chooser
-        // instead of silently opening the 3DS challenge in a Custom Tab.
+        // FLAG_ACTIVITY_NO_HISTORY deliberately NOT set here (it used to be):
+        // Android does not support delivering a result through
+        // onActivityResult() for an activity launched with this flag - it
+        // was harmless back when this method used a plain startActivity()
+        // launch, but became incompatible once the launch below switched to
+        // startActivityForResult() (needed so backing out of the challenge
+        // can be detected - see the comment below). With both set together,
+        // a *completed* challenge failed to return control to the app at
+        // all instead of resuming it via onNewIntent()/onActivityResult().
+        // launchUrl(context, uri) normally sets the intent's data
+        // internally - since we bypass it below (to get
+        // startActivityForResult instead), it must be set explicitly here.
+        // Without it the launched intent carries no data at all, so Android
+        // can't match it to a browser's intent filter and falls back to
+        // showing its generic "Open with" chooser instead of silently
+        // opening the 3DS challenge in a Custom Tab.
         customTabsIntent.intent.setData(uri);
         // Launched via startActivityForResult (not launchUrl) specifically
         // so onActivityResult fires when the user backs out of the 3DS
