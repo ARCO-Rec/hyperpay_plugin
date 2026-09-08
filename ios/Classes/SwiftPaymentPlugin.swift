@@ -234,6 +234,23 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
     }
     
     
+    /// Builds a diagnostic-rich details string from a failed submitTransaction
+    /// / param-construction error. `localizedDescription` alone can be just a
+    /// short, generic OPPWA-mapped description (e.g. "invalid or missing
+    /// parameter") that doesn't say which field or why - the NSError's own
+    /// `code` (HyperPay's OPPErrorCode) and `userInfo` sometimes carry the
+    /// real detail (e.g. a parameterErrors-style payload) that
+    /// `localizedDescription` drops.
+    private func detailedErrorDescription(_ error: Error?) -> String? {
+        guard let error = error else { return nil }
+        let nsError = error as NSError
+        var parts = [error.localizedDescription, "[OPPErrorCode: \(nsError.code)]"]
+        if !nsError.userInfo.isEmpty {
+            parts.append("userInfo: \(nsError.userInfo)")
+        }
+        return parts.joined(separator: " ")
+    }
+
     private func openCustomUI(checkoutId: String,result1: @escaping FlutterResult) {
         // New attempt - nothing has resolved it yet, and any leftover
         // safariVC from a prior abandoned attempt is no longer relevant.
@@ -284,7 +301,7 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
                         // Handle invalid transaction, check error
                         self.createalart(titletext: self.lang == "en" ? "Payment failed" : "فشلت عملية الدفع", msgtext: self.lang == "en" ? "Please try again later" : "برجاء المحاولة لاحقًا")
                         self.paymentCallbackDelivered = true
-                        result1(FlutterError.init(code: "1", message: "ProcessingPaymentError", details: error?.localizedDescription))
+                        result1(FlutterError.init(code: "1", message: "ProcessingPaymentError (no transaction)", details: self.detailedErrorDescription(error)))
                         return
                     }
                     if transaction.type == .asynchronous {
@@ -314,7 +331,7 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
                         // showing the generic native alert.
                         self.createalart(titletext: self.lang == "en" ? "Payment failed" : "فشلت عملية الدفع", msgtext: self.lang == "en" ? "Please try again later" : "برجاء المحاولة لاحقًا")
                         self.paymentCallbackDelivered = true
-                        result1(FlutterError.init(code: "1", message: "ProcessingPaymentError", details: error?.localizedDescription))
+                        result1(FlutterError.init(code: "1", message: "ProcessingPaymentError (transaction rejected)", details: self.detailedErrorDescription(error)))
                     }
                 }
             }
@@ -322,7 +339,7 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
                 // See error.code (OPPErrorCode) and error.localizedDescription to identify the reason of failure
                 self.createalart(titletext: self.lang == "en" ? "Payment failed" : "فشلت عملية الدفع", msgtext: self.lang == "en" ? "Please try again later" : "برجاء المحاولة لاحقًا")
                 self.paymentCallbackDelivered = true
-                result1(FlutterError.init(code: "1", message: "ProcessingPaymentError", details: error.localizedDescription))
+                result1(FlutterError.init(code: "1", message: "ProcessingPaymentError (invalid card params)", details: self.detailedErrorDescription(error)))
             }
         }
     }
@@ -348,7 +365,7 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
                 (transaction, error) in
                 guard let transaction = self.transaction else {
                     self.paymentCallbackDelivered = true
-                    result1(FlutterError.init(code: "1", message: "ProcessingPaymentError", details: error?.localizedDescription))
+                    result1(FlutterError.init(code: "1", message: "ProcessingPaymentError (no transaction)", details: self.detailedErrorDescription(error)))
                     return
                 }
                 if transaction.type == .asynchronous {
@@ -364,14 +381,14 @@ public class SwiftPaymentPlugin: NSObject,FlutterPlugin ,SFSafariViewControllerD
                 }
                 else {
                     self.paymentCallbackDelivered = true
-                    result1(FlutterError.init(code: "1", message: "ProcessingPaymentError", details: error?.localizedDescription))
+                    result1(FlutterError.init(code: "1", message: "ProcessingPaymentError (transaction rejected)", details: self.detailedErrorDescription(error)))
                 }
             }
         }
         catch let error as NSError {
             // See error.code (OPPErrorCode) and error.localizedDescription to identify the reason of failure
             self.paymentCallbackDelivered = true
-            result1(FlutterError.init(code: "1", message: "ProcessingPaymentError", details: error.localizedDescription))
+            result1(FlutterError.init(code: "1", message: "ProcessingPaymentError (invalid token params)", details: self.detailedErrorDescription(error)))
         }
     }
 

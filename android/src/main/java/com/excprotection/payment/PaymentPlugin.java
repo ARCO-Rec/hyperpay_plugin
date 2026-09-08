@@ -357,8 +357,15 @@ public class PaymentPlugin implements
                 paymentProvider.submitTransaction(transaction, this);
 
             } catch (PaymentException e) {
+                // getLocalizedMessage() alone can be a generic wrapper - the
+                // real detail (HyperPay's own error code + message) lives on
+                // the PaymentError, same as transactionFailed already reads
+                // below. Passing "" as details discarded it entirely.
                 paymentCallbackDelivered = true;
-                error("0.1", e.getLocalizedMessage(), "");
+                PaymentError paymentError = e.getError();
+                error("ProcessingPaymentError (invalid card params)",
+                        paymentError != null ? paymentError.getErrorMessage() : e.getLocalizedMessage(),
+                        paymentError != null ? paymentError.getErrorInfo() : "");
             }
         }
     }
