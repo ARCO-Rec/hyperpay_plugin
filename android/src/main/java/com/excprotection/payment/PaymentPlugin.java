@@ -419,18 +419,26 @@ public class PaymentPlugin implements
     @Override
     public boolean onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == PAYMENT_CUSTOM_TABS_REQUEST_CODE) {
-            // Returning here always means the user backed out of the 3DS
-            // challenge (system back gesture, the Custom Tab's own close
-            // button) without it ever completing - a genuine completion
-            // arrives separately via onNewIntent (a deep-link Intent
-            // matching ShopperResultUrl), which sets
-            // paymentCallbackDelivered first. Without this branch, backing
-            // out left the pending Result (and the Dart-side Future)
-            // unresolved forever - the reported "infinite loading" bug.
-            if (!paymentCallbackDelivered) {
-                paymentCallbackDelivered = true;
-                error("2", "OperationCancelledError", "");
-            }
+            // This branch alone doesn't distinguish "the user backed out"
+            // from "the Custom Tab finished because the redirect completed
+            // normally" - onActivityResult can fire before onNewIntent even
+            // on a genuine, successful completion (confirmed live: this
+            // branch resolving the payment as cancelled, followed moments
+            // later by onNewIntent trying to resolve the same already
+            // replied Result as a success, crashing the app with
+            // "IllegalStateException: Reply already submitted"). Deferring
+            // via the handler (instead of resolving synchronously) gives an
+            // in-flight onNewIntent delivery from the same redirect a chance
+            // to land first and correctly mark the payment as delivered;
+            // onNewIntent's own guard (below) is what actually prevents the
+            // crash in either ordering - this delay just stops a genuine
+            // success from being misreported as a cancellation first.
+            handler.postDelayed(() -> {
+                if (!paymentCallbackDelivered) {
+                    paymentCallbackDelivered = true;
+                    error("2", "OperationCancelledError", "");
+                }
+            }, 400);
             return true;
         }
         switch (resultCode) {
@@ -494,8 +502,17 @@ public class PaymentPlugin implements
             // errorString on every async/3DS-challenge completion that
             // returned via this deep-link path, even though the payment
             // itself succeeded.
-            paymentCallbackDelivered = true;
-            success("success");
+            //
+            // Guarded (unlike before) because onActivityResult's Custom Tabs
+            // branch can fire first and already resolve the Result (see its
+            // comment) - without this check, calling success() here a
+            // second time on an already-replied Result threw
+            // "IllegalStateException: Reply already submitted", an uncaught
+            // exception that crashed the whole app.
+            if (!paymentCallbackDelivered) {
+                paymentCallbackDelivered = true;
+                success("success");
+            }
             return true;
         }
         return false;
