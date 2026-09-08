@@ -535,6 +535,13 @@ public class PaymentPlugin implements
                 .build();
 
         customTabsIntent.intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+        // launchUrl(context, uri) normally sets this internally - since we
+        // bypass it below (to get startActivityForResult instead), it must
+        // be set explicitly here. Without it the launched intent carries no
+        // data at all, so Android can't match it to a browser's intent
+        // filter and falls back to showing its generic "Open with" chooser
+        // instead of silently opening the 3DS challenge in a Custom Tab.
+        customTabsIntent.intent.setData(uri);
         // Launched via startActivityForResult (not launchUrl) specifically
         // so onActivityResult fires when the user backs out of the 3DS
         // challenge without completing it - previously nothing observed
